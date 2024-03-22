@@ -33,6 +33,17 @@ def json_search(query):
     matches_filtered_json = matches_filtered.to_json(orient='records')
     return matches_filtered_json
 
+# return similar albums based on title
+def title_search(query):
+    matches = []
+    merged_df = pd.merge(episodes_df, reviews_df, left_on='id', right_on='id', how='inner')
+    matches = merged_df[merged_df['title'].str.lower().str.contains(query.lower())]
+    matches_filtered = matches[['title']]
+    matches_filtered_json = matches_filtered.to_json(orient='records')
+    return matches_filtered_json
+
+
+# routes
 @app.route("/")
 def home():
     return render_template('base.html',title="sample html")
