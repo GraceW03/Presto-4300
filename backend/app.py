@@ -15,13 +15,17 @@ os.environ['ROOT_PATH'] = os.path.abspath(os.path.join("..",os.curdir))
 current_directory = os.path.dirname(os.path.abspath(__file__))
 
 # Specify the path to the JSON file relative to the current script
-json_file_path = os.path.join(current_directory, 'init.json')
+json_file_path = os.path.join(current_directory, 'titles.json')
 
 # Assuming your JSON data is stored in a file named 'init.json'
 with open(json_file_path, 'r') as file:
     data = json.load(file)
-    episodes_df = pd.DataFrame(data['episodes'])
-    reviews_df = pd.DataFrame(data['reviews'])
+    # episodes_df = pd.DataFrame(data['episodes'])
+    # reviews_df = pd.DataFrame(data['reviews'])
+    for key in data['titles']:
+      data['titles'][key] = ' '.join(data['titles'][key])
+    titles = data['titles'].values()
+    titles_df = pd.DataFrame({"titles": titles})
 
 app = Flask(__name__)
 CORS(app)
@@ -38,16 +42,17 @@ def json_search(query):
 # return similar albums based on title
 def title_search(query):
     matches = []
-    merged_df = pd.merge(episodes_df, reviews_df, left_on='id', right_on='id', how='inner')
-    matches = merged_df[merged_df['title'].str.lower().str.contains(query.lower())]
+    # merged_df = pd.merge(episodes_df, reviews_df, left_on='id', right_on='id', how='inner')
+    # matches = merged_df[merged_df['title'].str.lower().str.contains(query.lower())]
     matches_filtered = matches[['title']]
     matches_filtered_json = matches_filtered.to_json(orient='records')
     return matches_filtered_json
 
 #return similar classical titles based on input title query
-def find_similar_titles(query, dataset, top_n=3):
+def find_similar_titles(query, dataset, top_n=8):
     vectorizer = TfidfVectorizer()
-    tfidf_matrix = vectorizer.fit_transform([' '.join(doc) for doc in dataset])
+    # tfidf_matrix = vectorizer.fit_transform([' '.join(dataset[doc]) for doc in dataset['titles']])
+    tfidf_matrix = vectorizer.fit_transform(dataset['titles'])
 
     query_vec = vectorizer.transform([query])
 
@@ -55,8 +60,9 @@ def find_similar_titles(query, dataset, top_n=3):
 
     top_indices = cosine_scores.argsort()[0][-top_n:][::-1]
 
-    top_titles = [' '.join(dataset[i]) for i in top_indices]
-    return top_titles
+    top_titles = pd.DataFrame({"albums": [dataset.loc[i]['titles'] for i in top_indices]})
+    top_json = top_titles.to_json(orient='records')
+    return top_json
 
 # routes
 @app.route("/")
@@ -67,6 +73,11 @@ def home():
 def episodes_search():
     text = request.args.get("title")
     return json_search(text)
+
+@app.route("/albums")
+def albums_search():
+    text = request.args.get("title")
+    return find_similar_titles(text, titles_df)
 
 if 'DB_NAME' not in os.environ:
     app.run(debug=True,host="0.0.0.0",port=5000)
