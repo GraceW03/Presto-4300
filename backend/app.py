@@ -4,6 +4,8 @@ from flask import Flask, render_template, request
 from flask_cors import CORS
 from helpers.MySQLDatabaseHandler import MySQLDatabaseHandler
 import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 # ROOT_PATH for linking with all your files. 
 # Feel free to use a config.py or settings.py with a global export variable
@@ -41,6 +43,24 @@ def title_search(query):
     matches_filtered = matches[['title']]
     matches_filtered_json = matches_filtered.to_json(orient='records')
     return matches_filtered_json
+
+#return similar classical titles based on input title query
+def find_similar_titles(query, dataset, top_n=3):
+    vectorizer = TfidfVectorizer()
+    tfidf_matrix = vectorizer.fit_transform([' '.join(doc) for doc in dataset])
+
+    query_vec = vectorizer.transform([query])
+
+    cosine_scores = cosine_similarity(query_vec, tfidf_matrix)
+
+    top_indices = cosine_scores.argsort()[0][-top_n:][::-1]
+
+    top_titles = [' '.join(dataset[i]) for i in top_indices]
+    return top_titles
+
+query = "mozart piano concertos"
+similar_titles = find_similar_titles(query, data)
+print(similar_titles)
 
 
 # routes
