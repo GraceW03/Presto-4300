@@ -94,6 +94,7 @@ input {
     margin-bottom: 50px;
     border-radius: 10px;
     border: 1px solid black;
+    padding: 20px;
 }
 
 .episode-title {
