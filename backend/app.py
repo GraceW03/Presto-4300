@@ -58,11 +58,6 @@ def find_similar_titles(query, dataset, top_n=3):
     top_titles = [' '.join(dataset[i]) for i in top_indices]
     return top_titles
 
-query = "mozart piano concertos"
-similar_titles = find_similar_titles(query, data)
-print(similar_titles)
-
-
 # routes
 @app.route("/")
 def home():
