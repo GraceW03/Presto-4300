@@ -79,6 +79,25 @@ def find_similar_albums(query, dataset, top_n=8):
     top_json = top_titles.to_json(orient='records')
     return top_json
 
+def jaccard_similarity(set1, set2):
+    intersection = len(set(set1).intersection(set2))
+    union = len(set(set1).union(set2))
+    return intersection / union if union != 0 else 0
+
+def find_most_relevant_albums(input_album, album_themes_map, top_n=10):
+    if input_album not in album_themes_map:
+        print(f"Album '{input_album}' not found.")
+        return []
+    input_themes = album_themes_map[input_album]
+    similarity_scores = []
+    for album, themes in album_themes_map.items():
+        if album == input_album:
+            continue
+        score = jaccard_similarity(input_themes, themes)
+        similarity_scores.append((album, score))
+    sorted_albums = sorted(similarity_scores, key=lambda x: x[1], reverse=True)
+    return sorted_albums[:top_n]
+
 # routes
 @app.route("/")
 def home():
