@@ -16,6 +16,7 @@ current_directory = os.path.dirname(os.path.abspath(__file__))
 
 # Specify the path to the JSON file relative to the current script
 json_file_path = os.path.join(current_directory, 'titles.json')
+json_file_two = os.path.join(current_directory, 'previews.json')
 
 # Assuming your JSON data is stored in a file named 'init.json'
 with open(json_file_path, 'r') as file:
@@ -26,6 +27,15 @@ with open(json_file_path, 'r') as file:
       data['titles'][key] = ' '.join(data['titles'][key])
     titles = data['titles'].values()
     titles_df = pd.DataFrame({"titles": titles})
+
+with open(json_file_two, 'r') as file:
+    data = json.load(file)
+    for key in data['0']:
+      data['0'][key] = ' '.join(data['0'][key])
+    albums = data['0'].values()
+    titles_df["reviews"] = albums
+
+print(titles_df)
 
 app = Flask(__name__)
 CORS(app)
@@ -60,7 +70,22 @@ def find_similar_titles(query, dataset, top_n=8):
 
     top_indices = cosine_scores.argsort()[0][-top_n:][::-1]
 
-    top_titles = pd.DataFrame({"albums": [dataset.loc[i]['titles'] for i in top_indices]})
+    top_titles = pd.DataFrame({"albums": [dataset.loc[i]['titles'] for i in top_indices], "reviews": [dataset.loc[i]['reviews'] for i in top_indices]})
+    top_json = top_titles.to_json(orient='records')
+    return top_json
+
+def find_similar_albums(query, dataset, top_n=8):
+    vectorizer = TfidfVectorizer()
+    # tfidf_matrix = vectorizer.fit_transform([' '.join(dataset[doc]) for doc in dataset['titles']])
+    tfidf_matrix = vectorizer.fit_transform(dataset['titles'])
+
+    query_vec = vectorizer.transform([query])
+
+    cosine_scores = cosine_similarity(query_vec, tfidf_matrix)
+
+    top_indices = cosine_scores.argsort()[0][-top_n:][::-1]
+
+    top_titles = pd.DataFrame({"albums": [dataset.loc[i]['albums'] for i in top_indices], "reviews": [dataset.loc[i]['reviews'] for i in top_indices]})
     top_json = top_titles.to_json(orient='records')
     return top_json
 
