@@ -49,42 +49,27 @@ def title_search(query):
     return matches_filtered_json
 
 #return similar classical titles based on input title query
-def find_similar_titles(query, dataset, top_n=8):
+def find_similar_titles(query, dataset):
     vectorizer = TfidfVectorizer()
-    # tfidf_matrix = vectorizer.fit_transform([' '.join(dataset[doc]) for doc in dataset['titles']])
+
     tfidf_matrix = vectorizer.fit_transform(dataset['titles'])
 
     query_vec = vectorizer.transform([query])
 
     cosine_scores = cosine_similarity(query_vec, tfidf_matrix)
 
-    top_indices = cosine_scores.argsort()[0][-top_n:][::-1]
+    top_indices = cosine_scores.argsort()[0][:][::-1]
 
     top_titles = pd.DataFrame({"albums": [dataset.loc[i]['titles'] for i in top_indices], "reviews": [dataset.loc[i]['reviews'] for i in top_indices]})
-    top_json = top_titles.to_json(orient='records')
-    return top_json
+    return top_titles
 
-def find_similar_albums(query, dataset, top_n=8):
-    vectorizer = TfidfVectorizer()
-    # tfidf_matrix = vectorizer.fit_transform([' '.join(dataset[doc]) for doc in dataset['titles']])
-    tfidf_matrix = vectorizer.fit_transform(dataset['titles'])
-
-    query_vec = vectorizer.transform([query])
-
-    cosine_scores = cosine_similarity(query_vec, tfidf_matrix)
-
-    top_indices = cosine_scores.argsort()[0][-top_n:][::-1]
-
-    top_titles = pd.DataFrame({"albums": [dataset.loc[i]['albums'] for i in top_indices], "reviews": [dataset.loc[i]['reviews'] for i in top_indices]})
-    top_json = top_titles.to_json(orient='records')
-    return top_json
 
 def jaccard_similarity(set1, set2):
     intersection = len(set(set1).intersection(set2))
     union = len(set(set1).union(set2))
     return intersection / union if union != 0 else 0
 
-def find_most_relevant_albums(input_album, album_themes_map, top_n=10):
+def find_most_relevant_albums(input_album, album_themes_map):
     if input_album not in album_themes_map:
         print(f"Album '{input_album}' not found.")
         return []
@@ -96,7 +81,26 @@ def find_most_relevant_albums(input_album, album_themes_map, top_n=10):
         score = jaccard_similarity(input_themes, themes)
         similarity_scores.append((album, score))
     sorted_albums = sorted(similarity_scores, key=lambda x: x[1], reverse=True)
-    return sorted_albums[:top_n]
+    return sorted_albums
+
+
+# this what we working on rn
+def combine_rankings(dataset, title_input, genre_input, composer_input, top_n=8):
+    ''' 
+    get a list of rankings from each algorithm, then will weight avg to 
+    get final result
+    '''
+    top_titles = find_similar_titles(title_input, dataset)
+
+    if genre_input != None:
+        pass #TODO
+
+    if composer_input != None:
+        pass #TODO
+
+    output = top_titles[:top_n]
+    top_json = output.to_json(orient='records')
+    return top_json
 
 # routes
 @app.route("/")
@@ -111,7 +115,9 @@ def episodes_search():
 @app.route("/albums")
 def albums_search():
     text = request.args.get("title")
-    return find_similar_titles(text, titles_df)
+    genre = request.args.get("genre")
+    composer = request.args.get("composer")
+    return combine_rankings(titles_df, text, genre, composer)
 
 if 'DB_NAME' not in os.environ:
     app.run(debug=True,host="0.0.0.0",port=5000)
