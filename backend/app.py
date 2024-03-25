@@ -35,8 +35,6 @@ with open(json_file_two, 'r') as file:
     albums = data['0'].values()
     titles_df["reviews"] = albums
 
-print(titles_df)
-
 app = Flask(__name__)
 CORS(app)
 
