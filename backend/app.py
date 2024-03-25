@@ -15,25 +15,17 @@ os.environ['ROOT_PATH'] = os.path.abspath(os.path.join("..",os.curdir))
 current_directory = os.path.dirname(os.path.abspath(__file__))
 
 # Specify the path to the JSON file relative to the current script
-json_file_path = os.path.join(current_directory, 'titles.json')
-json_file_two = os.path.join(current_directory, 'previews.json')
+json_file_path = os.path.join(current_directory, 'short_dataset.json')
 
 # Assuming your JSON data is stored in a file named 'init.json'
 with open(json_file_path, 'r') as file:
     data = json.load(file)
     # episodes_df = pd.DataFrame(data['episodes'])
     # reviews_df = pd.DataFrame(data['reviews'])
-    for key in data['titles']:
-      data['titles'][key] = ' '.join(data['titles'][key])
-    titles = data['titles'].values()
-    titles_df = pd.DataFrame({"titles": titles})
+    titles = data['titles']
+    reviews = data['reviews']
+    titles_df = pd.DataFrame({"titles": titles, "reviews": reviews})
 
-with open(json_file_two, 'r') as file:
-    data = json.load(file)
-    for key in data['0']:
-      data['0'][key] = ' '.join(data['0'][key])
-    albums = data['0'].values()
-    titles_df["reviews"] = albums
 
 app = Flask(__name__)
 CORS(app)

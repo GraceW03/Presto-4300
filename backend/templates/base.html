@@ -16,15 +16,15 @@
                 <h1 id="google-0-2">0</h1> -->
                 <h1>Presto</h1>
             </div>
-            <div class="input-box" onclick="sendFocus()">
+            <div class="input-box" onclick="sendFocus('filter-text-val')">
                 <img src="{{ url_for('static', filename='images/mag.png') }}" />
                 <input placeholder="Search for a classical album" id="filter-text-val">
             </div>
-            <div class="input-box" onclick="sendFocus()">
+            <div class="input-box" onclick="sendFocus('filter-text-genre')">
                 <img src="{{ url_for('static', filename='images/mag.png') }}" />
                 <input placeholder="Search for a classical genre" id="filter-text-genre">
             </div>
-            <div class="input-box" onclick="sendFocus()">
+            <div class="input-box" onclick="sendFocus('filter-text-composer')">
                 <img src="{{ url_for('static', filename='images/mag.png') }}" />
                 <input placeholder="Search for a composer" id="filter-text-composer">
             </div>
@@ -53,8 +53,8 @@
             </div>`
         }
 
-        function sendFocus() {
-            document.getElementById('filter-text-val').focus()
+        function sendFocus(id) {
+            document.getElementById(id).focus()
         }
 
         function filterText() {
