@@ -24,7 +24,8 @@ with open(json_file_path, 'r') as file:
     # reviews_df = pd.DataFrame(data['reviews'])
     titles = data['titles']
     reviews = data['reviews']
-    titles_df = pd.DataFrame({"titles": titles, "reviews": reviews})
+    themes = data['themes']
+    titles_df = pd.DataFrame({"titles": titles, "reviews": reviews, "themes": themes})
 
 
 app = Flask(__name__)
