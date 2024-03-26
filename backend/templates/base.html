@@ -27,84 +27,85 @@
                     </div>
                     <div class="icon"><i class="fas fa-search"></i></div>
                 </div>
-                <!-- END DROPDOWN -->
+            </div>
+            <!-- END DROPDOWN -->
 
 
-                <div class="input-box" onclick="sendFocus('filter-text-val')">
-                    <img src="{{ url_for('static', filename='images/mag.png') }}" />
-                    <input placeholder="Search for a classical album" id="filter-text-val">
-                </div>
-                <div class="input-box">
-                    <select id="filter-text-genre">
-                        <option value="" disabled selected hidden>Select a genre of interest</option>
-                        <option value="Orchestra">Orchestra</option>
-                        <option value="Chorus">Chorus</option>
-                        <option value="Opera">Opera</option>
-                        <option value="Piano">Piano</option>
-                    </select>
-                </div>
+            <div class="input-box" onclick="sendFocus('filter-text-val')">
+                <img src="{{ url_for('static', filename='images/mag.png') }}" />
+                <input placeholder="Search for a classical album" id="filter-text-val">
+            </div>
+            <div class="input-box">
+                <select id="filter-text-genre">
+                    <option value="" disabled selected hidden>Select a genre of interest</option>
+                    <option value="Orchestra">Orchestra</option>
+                    <option value="Chorus">Chorus</option>
+                    <option value="Opera">Opera</option>
+                    <option value="Piano">Piano</option>
+                </select>
+            </div>
 
-                <!-- <div class="input-box" onclick="sendFocus('filter-text-genre')">
+            <!-- <div class="input-box" onclick="sendFocus('filter-text-genre')">
                     <img src="{{ url_for('static', filename='images/mag.png') }}" />
                     <input placeholder="Search for a classical genre" id="filter-text-genre">
                 </div> -->
-                <div class="input-box" onclick="sendFocus('filter-text-composer')">
-                    <img src="{{ url_for('static', filename='images/mag.png') }}" />
-                    <input placeholder="Search for a composer" id="filter-text-composer">
-                </div>
-
+            <div class="input-box" onclick="sendFocus('filter-text-composer')">
+                <img src="{{ url_for('static', filename='images/mag.png') }}" />
+                <input placeholder="Search for a composer" id="filter-text-composer">
             </div>
 
-            <br>
-
-            <div class="submit-button-container">
-                <button onclick="filterText()">Submit Inputs</button>
-            </div>
-
-
-            <div id="answer-box">
-
-            </div>
         </div>
 
-        <!-- TESTING DROPDOWN -->
-        <script src="suggestions.js"></script>
-        <script src="script.js"></script>
-        <!-- END DROPDOWN -->
+        <br>
+
+        <div class="submit-button-container">
+            <button onclick="filterText()">Submit Inputs</button>
+        </div>
 
 
-        <script>
+        <div id="answer-box">
 
-            function answerBoxTemplate(title, review, rating) {
-                return `<div class=''>
+        </div>
+    </div>
+
+    <!-- TESTING DROPDOWN -->
+    <script src="suggestions.js"></script>
+    <script src="script.js"></script>
+    <!-- END DROPDOWN -->
+
+
+    <script>
+
+        function answerBoxTemplate(title, review, rating) {
+            return `<div class=''>
                 <h3 class='episode-title'>${title}</h3>
                 <p class='episode-desc'>${review}</p>
                 <!-- <p class='episode-rating'>IMDB Rating: ${rating}</p> -->
             </div>`
-            }
+        }
 
-            function sendFocus(id) {
-                document.getElementById(id).focus()
-            }
+        function sendFocus(id) {
+            document.getElementById(id).focus()
+        }
 
-            function filterText() {
-                document.getElementById("answer-box").innerHTML = ""
-                console.log(document.getElementById("filter-text-val").value)
-                fetch("/albums?" + new URLSearchParams({
-                    title: document.getElementById("filter-text-val").value,
-                    genre: document.getElementById("filter-text-genre").value,
-                    composer: document.getElementById("filter-text-composer").value
-                }).toString())
-                    .then((response) => response.json())
-                    .then((data) => data.forEach(row => {
+        function filterText() {
+            document.getElementById("answer-box").innerHTML = ""
+            console.log(document.getElementById("filter-text-val").value)
+            fetch("/albums?" + new URLSearchParams({
+                title: document.getElementById("filter-text-val").value,
+                genre: document.getElementById("filter-text-genre").value,
+                composer: document.getElementById("filter-text-composer").value
+            }).toString())
+                .then((response) => response.json())
+                .then((data) => data.forEach(row => {
 
-                        let tempDiv = document.createElement("div")
-                        // tempDiv.innerHTML = answerBoxTemplate(row.title, row.descr, row.imdb_rating)
-                        tempDiv.innerHTML = answerBoxTemplate(row.albums, row.reviews)
-                        document.getElementById("answer-box").appendChild(tempDiv)
-                    }));
+                    let tempDiv = document.createElement("div")
+                    // tempDiv.innerHTML = answerBoxTemplate(row.title, row.descr, row.imdb_rating)
+                    tempDiv.innerHTML = answerBoxTemplate(row.albums, row.reviews)
+                    document.getElementById("answer-box").appendChild(tempDiv)
+                }));
 
-            }
+        }
 
-        </script>
+    </script>
 </body>
