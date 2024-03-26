@@ -16,61 +16,85 @@
                 <h1 id="google-0-2">0</h1> -->
                 <h1>Presto</h1>
             </div>
-            <div class="input-box" onclick="sendFocus('filter-text-val')">
-                <img src="{{ url_for('static', filename='images/mag.png') }}" />
-                <input placeholder="Search for a classical album" id="filter-text-val">
-            </div>
-            <div class="input-box" onclick="sendFocus('filter-text-genre')">
-                <img src="{{ url_for('static', filename='images/mag.png') }}" />
-                <input placeholder="Search for a classical genre" id="filter-text-genre">
-            </div>
-            <div class="input-box" onclick="sendFocus('filter-text-composer')">
-                <img src="{{ url_for('static', filename='images/mag.png') }}" />
-                <input placeholder="Search for a composer" id="filter-text-composer">
+
+            <!-- TESTING DROPDOWN -->
+            <div class="wrapper">
+                <div class="search-input">
+                    <a href="" target="_blank" hidden></a>
+                    <input type="text" placeholder="Type to search..">
+                    <div class="autocom-box">
+                        <!-- here list are inserted from javascript -->
+                    </div>
+                    <div class="icon"><i class="fas fa-search"></i></div>
+                </div>
+                <!-- END DROPDOWN -->
+
+
+                <div class="input-box" onclick="sendFocus('filter-text-val')">
+                    <img src="{{ url_for('static', filename='images/mag.png') }}" />
+                    <input placeholder="Search for a classical album" id="filter-text-val">
+                </div>
+                <div class="input-box" onclick="sendFocus('filter-text-genre')">
+                    <img src="{{ url_for('static', filename='images/mag.png') }}" />
+                    <input placeholder="Search for a classical genre" id="filter-text-genre">
+                </div>
+                <div class="input-box" onclick="sendFocus('filter-text-composer')">
+                    <img src="{{ url_for('static', filename='images/mag.png') }}" />
+                    <input placeholder="Search for a composer" id="filter-text-composer">
+                </div>
+
             </div>
 
+            <br>
+
+            <div class="submit-button-container">
+                <button onclick="filterText()">Submit Inputs</button>
+            </div>
+
+
+            <div id="answer-box">
+
+            </div>
         </div>
 
-        <br>
+        <!-- TESTING DROPDOWN -->
+        <script src="suggestions.js"></script>
+        <script src="script.js"></script>
+        <!-- END DROPDOWN -->
 
-        <div class="submit-button-container">
-            <button onclick="filterText()">Submit Inputs</button>
-        </div>
 
+        <script>
 
-        <div id="answer-box">
-
-        </div>
-    </div>
-
-    <script>
-
-        function answerBoxTemplate(title, review, rating) {
-            return `<div class=''>
+            function answerBoxTemplate(title, review, rating) {
+                return `<div class=''>
                 <h3 class='episode-title'>${title}</h3>
                 <p class='episode-desc'>${review}</p>
                 <!-- <p class='episode-rating'>IMDB Rating: ${rating}</p> -->
             </div>`
-        }
+            }
 
-        function sendFocus(id) {
-            document.getElementById(id).focus()
-        }
+            function sendFocus(id) {
+                document.getElementById(id).focus()
+            }
 
-        function filterText() {
-            document.getElementById("answer-box").innerHTML = ""
-            console.log(document.getElementById("filter-text-val").value)
-            fetch("/albums?" + new URLSearchParams({ title: document.getElementById("filter-text-val").value }).toString())
-                .then((response) => response.json())
-                .then((data) => data.forEach(row => {
+            function filterText() {
+                document.getElementById("answer-box").innerHTML = ""
+                console.log(document.getElementById("filter-text-val").value)
+                fetch("/albums?" + new URLSearchParams({
+                    title: document.getElementById("filter-text-val").value,
+                    genre: document.getElementById("filter-text-genre").value,
+                    composer: document.getElementById("filter-text-composer").value
+                }).toString())
+                    .then((response) => response.json())
+                    .then((data) => data.forEach(row => {
 
-                    let tempDiv = document.createElement("div")
-                    // tempDiv.innerHTML = answerBoxTemplate(row.title, row.descr, row.imdb_rating)
-                    tempDiv.innerHTML = answerBoxTemplate(row.albums, row.reviews)
-                    document.getElementById("answer-box").appendChild(tempDiv)
-                }));
+                        let tempDiv = document.createElement("div")
+                        // tempDiv.innerHTML = answerBoxTemplate(row.title, row.descr, row.imdb_rating)
+                        tempDiv.innerHTML = answerBoxTemplate(row.albums, row.reviews)
+                        document.getElementById("answer-box").appendChild(tempDiv)
+                    }));
 
-        }
+            }
 
-    </script>
+        </script>
 </body>
