@@ -70,19 +70,24 @@ def jaccard_similarity(set1, set2):
     union = len(set(set1).union(set2))
     return intersection / union if union != 0 else 0
 
-def find_most_relevant_albums(input_album, album_themes_map):
-    if input_album not in album_themes_map:
-        print(f"Album '{input_album}' not found.")
-        return []
-    input_themes = album_themes_map[input_album]
-    similarity_scores = []
-    for album, themes in album_themes_map.items():
-        if album == input_album:
+def inverted_index(album_name, dataset):
+    for index, name in enumerate(dataset["titles"]):
+        if album_name != name:
             continue
-        score = jaccard_similarity(input_themes, themes)
-        similarity_scores.append((album, score))
-    sorted_albums = sorted(similarity_scores, key=lambda x: x[1], reverse=True)
-    return sorted_albums
+        else:
+            return index
+
+def theme_similarity_scores(input_album, dataset):
+    location = inverted_index(input_album, dataset)
+    input_themes = dataset["themes"][location]
+    similarity_scores = []
+    for themes in dataset["themes"]:
+        if input_themes == themes:
+            continue
+        else:
+            score = jaccard_similarity(input_themes, themes)
+            similarity_scores.append(score)
+    return similarity_scores
 
 
 # this what we working on rn
@@ -91,6 +96,8 @@ def combine_rankings(dataset, title_input, genre_input, composer_input, top_n=8)
     get a list of rankings from each algorithm, then will weight avg to 
     get final result
     '''
+    theme_similarity = theme_similarity_scores(title_input, dataset)
+    
     top_titles = find_similar_titles(title_input, dataset)
 
     if genre_input != None:
