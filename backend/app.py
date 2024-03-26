@@ -96,7 +96,7 @@ def combine_rankings(dataset, title_input, genre_input, composer_input, top_n=8)
     get a list of rankings from each algorithm, then will weight avg to 
     get final result
     '''
-    theme_similarity = theme_similarity_scores(title_input, dataset)
+    # theme_similarity = theme_similarity_scores(title_input, dataset)
     
     top_titles = find_similar_titles(title_input, dataset)
 
