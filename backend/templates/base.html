@@ -5,6 +5,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Kanit&family=Montserrat&family=Open+Sans:wght@500&display=swap"
     rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <body>
     <div class="full-body-container">
@@ -30,7 +32,9 @@
             </div>
             <!-- END DROPDOWN -->
 
-
+            <!-- <div class="input-box">
+                <select id="filter-text-val"></select>
+            </div> -->
             <div class="input-box" onclick="sendFocus('filter-text-val')">
                 <img src="{{ url_for('static', filename='images/mag.png') }}" />
                 <input placeholder="Search for a classical album" id="filter-text-val">
@@ -67,6 +71,14 @@
 
         </div>
     </div>
+
+    <!-- <script>
+        $(document).ready(function () {
+            $('#filter-text-val').select2({
+                data: albums.map(album => ({ id: album, text: album }))
+            });
+        });
+    </script> -->
 
     <!-- TESTING DROPDOWN -->
     <script src="suggestions.js"></script>

@@ -56,3 +56,40 @@ function showSuggestions(list) {
   }
   suggBox.innerHTML = listData;
 }
+
+//Testing select2 -> ignore
+$(document).ready(function () {
+  $("#filter-text-val").select2({
+    data: albums.map((album) => ({ id: album, text: album })),
+  });
+
+  $("#filter-text-val").on("select2:select", function (e) {
+    const selectedAlbum = e.params.data.text;
+    inputBox.value = selectedAlbum;
+  });
+});
+
+function filterText() {
+  document.getElementById("answer-box").innerHTML = "";
+  const albumValue = $("#filter-text-val").val();
+  const genreValue = document.getElementById("filter-text-genre").value;
+  const composerValue = document.getElementById("filter-text-composer").value;
+
+  fetch(
+    "/albums?" +
+    new URLSearchParams({
+      title: albumValue,
+      genre: genreValue,
+      composer: composerValue,
+    }).toString()
+  )
+    .then((response) => response.json())
+    .then((data) =>
+      data.forEach((row) => {
+        let tempDiv = document.createElement("div");
+        tempDiv.innerHTML = answerBoxTemplate(row.albums, row.reviews);
+        document.getElementById("answer-box").appendChild(tempDiv);
+      })
+    );
+}
+//Testing select2 -> ignore
