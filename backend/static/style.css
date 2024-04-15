@@ -87,6 +87,17 @@ input {
     outline: 0;
 }
 
+.input-box select {
+    border: black;
+    border-radius: 10px;
+    width: 100%;
+    background-color: floralwhite;
+    font-size: 16px;
+    margin-left: 10px;
+    outline: 0;
+    color: gray;
+}
+
 #answer-box {
     width: 700px;
     margin-top: 50px;

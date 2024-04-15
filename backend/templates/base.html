@@ -40,15 +40,6 @@
                 <img src="{{ url_for('static', filename='images/mag.png') }}" />
                 <input placeholder="Search for a classical album" id="filter-text-val">
             </div>
-            <div class="input-box">
-                <select id="filter-text-genre">
-                    <option value="" disabled selected hidden>Select a genre of interest</option>
-                    <option value="Orchestra">Orchestra</option>
-                    <option value="Chorus">Chorus</option>
-                    <option value="Opera">Opera</option>
-                    <option value="Piano">Piano</option>
-                </select>
-            </div>
 
             <!-- <div class="input-box" onclick="sendFocus('filter-text-genre')">
                     <img src="{{ url_for('static', filename='images/mag.png') }}" />
@@ -57,6 +48,17 @@
             <div class="input-box" onclick="sendFocus('filter-text-composer')">
                 <img src="{{ url_for('static', filename='images/mag.png') }}" />
                 <input placeholder="Search for a composer" id="filter-text-composer">
+            </div>
+
+            <div class="input-box">
+                <img src="{{ url_for('static', filename='images/mag.png') }}" />
+                <select id="filter-text-genre">
+                    <option value="" disabled selected hidden>Select a purpose (optional)</option>
+                    <option value="Orchestra">study</option>
+                    <option value="Chorus">exercise</option>
+                    <option value="Opera">relax</option>
+                    <option value="Piano">sleep</option>
+                </select>
             </div>
 
         </div>
