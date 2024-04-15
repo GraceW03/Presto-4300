@@ -6,6 +6,8 @@ from helpers.MySQLDatabaseHandler import MySQLDatabaseHandler
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.decomposition import TruncatedSVD
+import numpy as np
 
 # ROOT_PATH for linking with all your files. 
 # Feel free to use a config.py or settings.py with a global export variable
@@ -15,30 +17,31 @@ os.environ['ROOT_PATH'] = os.path.abspath(os.path.join("..",os.curdir))
 current_directory = os.path.dirname(os.path.abspath(__file__))
 
 # Specify the path to the JSON file relative to the current script
-json_file_path = os.path.join(current_directory, 'dataset_with_themes.json')
+json_file_path = os.path.join(current_directory, 'init.json')
 
 # Assuming your JSON data is stored in a file named 'init.json'
 with open(json_file_path, 'r') as file:
     data = json.load(file)
     # episodes_df = pd.DataFrame(data['episodes'])
     # reviews_df = pd.DataFrame(data['reviews'])
-    titles = data['titles']
-    reviews = data['reviews']
-    themes = data['themes']
-    titles_df = pd.DataFrame({"titles": titles, "reviews": reviews, "themes": themes})
+    artists = data['Artist'].values()
+    reviews = data['Review'].values()
+    titles = data['Album'].values()
+    eras = data['Era'].values()
+    titles_df = pd.DataFrame({"titles": titles, "artists": artists, "reviews": reviews, "eras": eras})
 
 
 app = Flask(__name__)
 CORS(app)
 
 # Sample search using json with pandas
-def json_search(query):
-    matches = []
-    merged_df = pd.merge(episodes_df, reviews_df, left_on='id', right_on='id', how='inner')
-    matches = merged_df[merged_df['title'].str.lower().str.contains(query.lower())]
-    matches_filtered = matches[['title', 'descr', 'imdb_rating']]
-    matches_filtered_json = matches_filtered.to_json(orient='records')
-    return matches_filtered_json
+# def json_search(query):
+#     matches = []
+#     merged_df = pd.merge(episodes_df, reviews_df, left_on='id', right_on='id', how='inner')
+#     matches = merged_df[merged_df['title'].str.lower().str.contains(query.lower())]
+#     matches_filtered = matches[['title', 'descr', 'imdb_rating']]
+#     matches_filtered_json = matches_filtered.to_json(orient='records')
+#     return matches_filtered_json
 
 # return similar albums based on title
 def title_search(query):
@@ -53,15 +56,15 @@ def title_search(query):
 def find_similar_titles(query, dataset):
     vectorizer = TfidfVectorizer()
 
-    tfidf_matrix = vectorizer.fit_transform(dataset['titles'])
+    tfidf_matrix = vectorizer.fit_transform(dataset['titles'].fillna(""))
 
     query_vec = vectorizer.transform([query])
 
     cosine_scores = cosine_similarity(query_vec, tfidf_matrix)
 
-    top_indices = cosine_scores.argsort()[0][:][::-1]
-
-    top_titles = pd.DataFrame({"albums": [dataset.loc[i]['titles'] for i in top_indices], "reviews": [dataset.loc[i]['reviews'] for i in top_indices]})
+    top_indices = cosine_scores.argsort()[0][:][::-1] #LOL its okay t
+    
+    top_titles = pd.DataFrame({"titles": [dataset.loc[i]['titles'] for i in top_indices], "reviews": [dataset.loc[i]['reviews'] for i in top_indices]})
     return top_titles
 
 
@@ -89,9 +92,44 @@ def theme_similarity_scores(input_album, dataset):
             similarity_scores.append(score)
     return similarity_scores
 
+# SVD similarity
+def SVD(input_album, df):
+    albums = df["titles"].to_list()
+    reviews = df["reviews"].fillna("")
+    # Step 2: Preprocess and Vectorize the Text Data
+    vectorizer = TfidfVectorizer(stop_words='english', max_features=500)
+    X = vectorizer.fit_transform(reviews)
+
+    # Step 3: Apply SVD to Reduce Dimensionality
+    svd_model = TruncatedSVD(n_components=100)  # Adjust the number of components as needed
+    latent_matrix = svd_model.fit_transform(X)
+
+    # Step 4: Compute Similarities Between the Reviews
+    similarity_matrix = cosine_similarity(latent_matrix)
+
+    if input_album not in albums:
+        print("Album not found.")
+        return []
+
+    # Get the index of the input album
+    index = albums.index(input_album)
+
+    # Create a list of similarity scores with other albums
+    similarity_scores = []
+    for i in range(len(similarity_matrix)):
+        if albums[i] != input_album:  # Ignore the input album itself
+            similarity_scores.append((albums[i], similarity_matrix[index][i]))
+
+    # Sort the albums based on similarity score in descending order
+    similarity_scores.sort(key=lambda x: x[1], reverse=True)
+
+    # Get the top similar albums
+    output = pd.DataFrame({"titles": [s[0] for s in similarity_scores], "scores": [s[1] for s in similarity_scores]})
+    return output
+
 
 # this what we working on rn
-def combine_rankings(dataset, title_input, genre_input, composer_input, top_n=8):
+def combine_rankings(dataset, title_input, composer_input, purpose_input, top_n=8):
     ''' 
     get a list of rankings from each algorithm, then will weight avg to 
     get final result
@@ -100,13 +138,18 @@ def combine_rankings(dataset, title_input, genre_input, composer_input, top_n=8)
     
     top_titles = find_similar_titles(title_input, dataset)
 
-    if genre_input != None:
-        pass #TODO
-
     if composer_input != None:
         pass #TODO
 
-    output = top_titles[:top_n]
+    if purpose_input != None:
+        pass #TODO
+
+    top_title = top_titles.iloc[0]
+    print(top_title)
+
+    output = SVD(top_title["titles"], titles_df)[:top_n]
+    print(output)
+    
     top_json = output.to_json(orient='records')
     return top_json
 
@@ -115,10 +158,6 @@ def combine_rankings(dataset, title_input, genre_input, composer_input, top_n=8)
 def home():
     return render_template('base.html',title="sample html")
 
-@app.route("/episodes")
-def episodes_search():
-    text = request.args.get("title")
-    return json_search(text)
 
 @app.route("/albums")
 def albums_search():

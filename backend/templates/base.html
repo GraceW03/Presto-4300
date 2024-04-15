@@ -38,7 +38,7 @@
             </div> -->
             <div class="input-box" onclick="sendFocus('filter-text-val')">
                 <img src="{{ url_for('static', filename='images/mag.png') }}" />
-                <input placeholder="Search for a classical album" id="filter-text-val">
+                <input placeholder="Search for a classical album (a single word)" id="filter-text-val">
             </div>
 
             <!-- <div class="input-box" onclick="sendFocus('filter-text-genre')">
@@ -53,11 +53,11 @@
             <div class="input-box">
                 <img src="{{ url_for('static', filename='images/mag.png') }}" />
                 <select id="filter-text-genre">
-                    <option value="" disabled selected hidden>Select a purpose (optional)</option>
-                    <option value="Orchestra">study</option>
-                    <option value="Chorus">exercise</option>
-                    <option value="Opera">relax</option>
-                    <option value="Piano">sleep</option>
+                    <option value="" selected hidden>Select a purpose (optional)</option>
+                    <option value="study">study</option>
+                    <option value="exercise">exercise</option>
+                    <option value="relax">relax</option>
+                    <option value="sleep">sleep</option>
                 </select>
             </div>
 
@@ -91,11 +91,10 @@
 
     <script>
 
-        function answerBoxTemplate(title, review, rating) {
+        function answerBoxTemplate(title, score) {
             return `<div class=''>
                 <h3 class='episode-title'>${title}</h3>
-                <p class='episode-desc'>${review}</p>
-                <!-- <p class='episode-rating'>IMDB Rating: ${rating}</p> -->
+                <p class='episode-desc'>Similarity Score: ${score}</p>
             </div>`
         }
 
@@ -116,7 +115,7 @@
 
                     let tempDiv = document.createElement("div")
                     // tempDiv.innerHTML = answerBoxTemplate(row.title, row.descr, row.imdb_rating)
-                    tempDiv.innerHTML = answerBoxTemplate(row.albums, row.reviews)
+                    tempDiv.innerHTML = answerBoxTemplate(row.titles, row.scores)
                     document.getElementById("answer-box").appendChild(tempDiv)
                 }));
 
