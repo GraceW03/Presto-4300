@@ -120,6 +120,29 @@ def SVD(input_album, df):
     output = pd.DataFrame({"title": [s[0] for s in similarity_scores], "scores": [s[1] for s in similarity_scores]})
     return output
 
+# Update similarity scores after SVD by filtering eras
+def era_filter(composer_input, df): # the df here is the output df after applying SVD; titles_df is the global variable for the original dataset's dataframe
+  era_list = {"Medieval": 0, "Renaissance": 1, "Baroque": 2, "Classical": 3, "Early Romantic": 4, "Late Romantic": 5, "20th and 21st century": 6}
+  composer_index = composer_reverse_index[composer_input]
+  composer_era = titles_df["Era"][composer_index]
+  composer_era_num = era_list[composer_era]
+  df_era_num_list = []
+  df_era_diff_list = []
+  for n in range(len(df)):
+    title = df.iloc[n]["titles"]
+    title_index = title_reverse_index[title]
+    title_era = titles_df["Era"][title_index]
+    title_era_num = era_list[title_era]
+    df_era_num_list.append(title_era_num)
+    diff = title_era_num - composer_era_num
+    df_era_diff_list.append(diff)
+  df["era"] = df_era_num_list
+  df["era_diff"] = df_era_diff_list
+  df["updated_score"] = .7 * df["scores"] + .3 * (1 / (df["era_diff"] + 1))
+  output = df.sort_values(by='updated_score', ascending=False)
+  return output
+
+
 
 # this what we working on rn
 def combine_rankings(dataset, title_input, composer_input, purpose_input, top_n=8):
