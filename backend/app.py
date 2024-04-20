@@ -120,7 +120,7 @@ def SVD(input_album, df):
     output = pd.DataFrame({"title": [s[0] for s in similarity_scores], "scores": [s[1] for s in similarity_scores]})
     return output
 
-# Update similarity scores after SVD by filtering eras
+    # Update similarity scores after SVD by filtering eras
 def era_filter(composer_input, df): # the df here is the output df after applying SVD; titles_df is the global variable for the original dataset's dataframe
   era_list = {"Medieval": 0, "Renaissance": 1, "Baroque": 2, "Classical": 3, "Early Romantic": 4, "Late Romantic": 5, "20th and 21st century": 6}
   composer_index = composer_reverse_index[composer_input]
@@ -172,16 +172,33 @@ def combine_rankings(dataset, title_input, composer_input, purpose_input, top_n=
     # title_reverse_index to get the proper row from titles_df
     # make a list of the series, then we'll convert it to a df
     print(dataset.shape)
-    ranked_titles = []
-    for title in output["title"]:
+    titles = []
+    composers = []
+    eras = []
+    scores = []
+    # descriptions 
+    # title, composer, era, score
+    for i in range(top_n):
+        title = output["title"].iloc[i]
+        score = output["scores"].iloc[i]
         row = (dataset.loc[dataset['titles'] == title])
-        ranked_titles.append(row)
-    print(ranked_titles)
+
+        if not row.empty:
+            row = row.iloc[0]
+            titles.append(row["titles"])
+            composers.append(row["artists"])
+            eras.append(row["eras"])
+            scores.append(score)
+
+
+
+    new_output = pd.DataFrame({"title": titles, "artists": composers, "era": eras, "scores": score})
 
     # top_json becomes ranked dataframe to json file
 
     
-    top_json = output.to_json(orient='records')
+    top_json = new_output.to_json(orient='records')
+    print (top_json)
     return top_json
 
 # routes
