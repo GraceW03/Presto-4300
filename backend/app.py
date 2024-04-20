@@ -22,26 +22,18 @@ json_file_path = os.path.join(current_directory, 'init.json')
 # Assuming your JSON data is stored in a file named 'init.json'
 with open(json_file_path, 'r') as file:
     data = json.load(file)
-    # episodes_df = pd.DataFrame(data['episodes'])
-    # reviews_df = pd.DataFrame(data['reviews'])
     artists = data['Artist'].values()
     reviews = data['Review'].values()
     titles = data['Album'].values()
     eras = data['Era'].values()
     titles_df = pd.DataFrame({"titles": titles, "artists": artists, "reviews": reviews, "eras": eras})
 
+title_reverse_index = {t: i for i, t in enumerate(titles_df["titles"])}
+composer_reverse_index = {t: i for i, t in enumerate(titles_df["artists"])}
 
 app = Flask(__name__)
 CORS(app)
 
-# Sample search using json with pandas
-# def json_search(query):
-#     matches = []
-#     merged_df = pd.merge(episodes_df, reviews_df, left_on='id', right_on='id', how='inner')
-#     matches = merged_df[merged_df['title'].str.lower().str.contains(query.lower())]
-#     matches_filtered = matches[['title', 'descr', 'imdb_rating']]
-#     matches_filtered_json = matches_filtered.to_json(orient='records')
-#     return matches_filtered_json
 
 # return similar albums based on title
 def title_search(query):
@@ -62,9 +54,10 @@ def find_similar_titles(query, dataset):
 
     cosine_scores = cosine_similarity(query_vec, tfidf_matrix)
 
-    top_indices = cosine_scores.argsort()[0][:][::-1] #LOL its okay t
+    top_indices = cosine_scores.argsort()[0][:][::-1]
     
-    top_titles = pd.DataFrame({"titles": [dataset.loc[i]['titles'] for i in top_indices], "reviews": [dataset.loc[i]['reviews'] for i in top_indices]})
+    top_titles = pd.DataFrame({"titles": [dataset.loc[i]['titles'] for i in top_indices], 
+                               "reviews": [dataset.loc[i]['reviews'] for i in top_indices]})
     return top_titles
 
 
@@ -124,7 +117,7 @@ def SVD(input_album, df):
     similarity_scores.sort(key=lambda x: x[1], reverse=True)
 
     # Get the top similar albums
-    output = pd.DataFrame({"titles": [s[0] for s in similarity_scores], "scores": [s[1] for s in similarity_scores]})
+    output = pd.DataFrame({"title": [s[0] for s in similarity_scores], "scores": [s[1] for s in similarity_scores]})
     return output
 
 
@@ -136,7 +129,7 @@ def combine_rankings(dataset, title_input, composer_input, purpose_input, top_n=
     '''
     # theme_similarity = theme_similarity_scores(title_input, dataset)
     
-    top_titles = find_similar_titles(title_input, dataset)
+    top_titles = find_similar_titles(title_input, dataset) #TODO delete when we have dropdown
 
     if composer_input != None:
         pass #TODO
@@ -145,10 +138,25 @@ def combine_rankings(dataset, title_input, composer_input, purpose_input, top_n=
         pass #TODO
 
     top_title = top_titles.iloc[0]
-    print(top_title)
 
-    output = SVD(top_title["titles"], titles_df)[:top_n]
-    print(output)
+    title_svd_output = SVD(top_title["titles"], titles_df)[:top_n]
+    # print(title_svd_output)
+
+    # weight all of the rankings, get a list of titles sorted properly
+    output = title_svd_output # TODO LATER 
+
+    # for each i in top_n, get the title in the ranked list (output), then use
+    # title_reverse_index to get the proper row from titles_df
+    # make a list of the series, then we'll convert it to a df
+    print(dataset.shape)
+    ranked_titles = []
+    for title in output["title"]:
+        row = (dataset.loc[dataset['titles'] == title])
+        ranked_titles.append(row)
+    print(ranked_titles)
+
+    # top_json becomes ranked dataframe to json file
+
     
     top_json = output.to_json(orient='records')
     return top_json

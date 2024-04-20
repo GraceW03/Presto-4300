@@ -91,9 +91,10 @@
 
     <script>
 
-        function answerBoxTemplate(title, score) {
+        function answerBoxTemplate(title, composer, score) {
             return `<div class=''>
                 <h3 class='episode-title'>${title}</h3>
+                <h3 class='compoer'>${composer}</h3>
                 <p class='episode-desc'>Similarity Score: ${score}</p>
             </div>`
         }
@@ -114,8 +115,8 @@
                 .then((data) => data.forEach(row => {
 
                     let tempDiv = document.createElement("div")
-                    // tempDiv.innerHTML = answerBoxTemplate(row.title, row.descr, row.imdb_rating)
-                    tempDiv.innerHTML = answerBoxTemplate(row.titles, row.scores)
+                    // get title, composer, description (TODO) 
+                    tempDiv.innerHTML = answerBoxTemplate(row.title, row.artists, row.scores)
                     document.getElementById("answer-box").appendChild(tempDiv)
                 }));
 
