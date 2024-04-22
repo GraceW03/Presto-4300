@@ -120,7 +120,7 @@ def SVD(input_album, df):
     output = pd.DataFrame({"title": [s[0] for s in similarity_scores], "scores": [s[1] for s in similarity_scores]})
     return output
 
-    # Update similarity scores after SVD by filtering eras
+# Update similarity scores after SVD by filtering eras
 def era_filter(composer_input, df): # the df here is the output df after applying SVD; titles_df is the global variable for the original dataset's dataframe
   era_list = {"Medieval": 0, "Renaissance": 1, "Baroque": 2, "Classical": 3, "Early Romantic": 4, "Late Romantic": 5, "20th and 21st century": 6}
   composer_index = composer_reverse_index[composer_input]
@@ -150,33 +150,32 @@ def combine_rankings(dataset, title_input, composer_input, purpose_input, top_n=
     get a list of rankings from each algorithm, then will weight avg to 
     get final result
     '''
-    # theme_similarity = theme_similarity_scores(title_input, dataset)
     
     top_titles = find_similar_titles(title_input, dataset) #TODO delete when we have dropdown
 
-    if composer_input != None:
-        pass #TODO
-
-    if purpose_input != None:
-        pass #TODO
-
     top_title = top_titles.iloc[0]
 
-    title_svd_output = SVD(top_title["titles"], titles_df)[:top_n]
-    # print(title_svd_output)
+    title_svd_output = SVD(top_title["titles"], titles_df)
+    output = title_svd_output[:top_n]
 
+    # filter by composer era
+    if composer_input != "":
+        era_output = era_filter(composer_input, title_svd_output)
+        output = era_output[:top_n] # TODO LATER 
+
+    if purpose_input != "":
+        pass #TODO
+    
     # weight all of the rankings, get a list of titles sorted properly
-    output = title_svd_output # TODO LATER 
 
     # for each i in top_n, get the title in the ranked list (output), then use
     # title_reverse_index to get the proper row from titles_df
     # make a list of the series, then we'll convert it to a df
-    print(dataset.shape)
     titles = []
     composers = []
     eras = []
     scores = []
-    # descriptions 
+    # descriptions = [] 
     # title, composer, era, score
     for i in range(top_n):
         title = output["title"].iloc[i]
@@ -198,7 +197,6 @@ def combine_rankings(dataset, title_input, composer_input, purpose_input, top_n=
 
     
     top_json = new_output.to_json(orient='records')
-    print (top_json)
     return top_json
 
 # routes
