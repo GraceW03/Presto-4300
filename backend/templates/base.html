@@ -19,32 +19,14 @@
                 <h1>Presto</h1>
             </div>
 
-            <!-- TESTING DROPDOWN -->
-            <!-- from https://www.codingnepalweb.com/search-bar-autocomplete-search-suggestions-javascript/ -->
-            <!-- <div class="wrapper">
-                <div class="search-input">
-                    <a href="" target="_blank" hidden></a>
-                    <input type="text" placeholder="Type to search..">
-                    <div class="autocom-box"> -->
-            <!-- here list are inserted from javascript -->
-            <!-- </div>
-                    <div class="icon"><i class="fas fa-search"></i></div>
-                </div>
-            </div> -->
-            <!-- END DROPDOWN -->
 
-            <!-- <div class="input-box">
-                <select id="filter-text-val"></select>
-            </div> -->
+
+
             <div class="input-box" onclick="sendFocus('filter-text-val')">
                 <img src="{{ url_for('static', filename='images/mag.png') }}" />
                 <input placeholder="Search for a classical album" id="filter-text-val">
             </div>
 
-            <!-- <div class="input-box" onclick="sendFocus('filter-text-genre')">
-                    <img src="{{ url_for('static', filename='images/mag.png') }}" />
-                    <input placeholder="Search for a classical genre" id="filter-text-genre">
-                </div> -->
             <div class="input-box" onclick="sendFocus('filter-text-composer')">
                 <img src="{{ url_for('static', filename='images/mag.png') }}" />
                 <input placeholder="Search for a composer" id="filter-text-composer">
@@ -54,10 +36,10 @@
                 <img src="{{ url_for('static', filename='images/mag.png') }}" />
                 <select id="filter-text-genre">
                     <option value="" selected hidden>Select a purpose (optional)</option>
-                    <option value="study">study</option>
-                    <option value="exercise">exercise</option>
-                    <option value="relax">relax</option>
-                    <option value="sleep">sleep</option>
+                    <option value="study" style="color:black">study</option>
+                    <option value="exercise" style="color:black">exercise</option>
+                    <option value="relax" style="color:black">relax</option>
+                    <option value="sleep" style="color:black">sleep</option>
                 </select>
             </div>
 
@@ -83,24 +65,61 @@
         });
     </script> -->
 
-    <!-- TESTING DROPDOWN -->
-    <script src="suggestions.js"></script>
-    <script src="script.js"></script>
-    <!-- END DROPDOWN -->
-
 
     <script>
 
-        function answerBoxTemplate(title, composer, score) {
-            return `<div class=''>
-                <h3 class='episode-title'>${title}</h3>
-                <h3 class='compoer'>${composer}</h3>
-                <p class='episode-desc'>Similarity Score: ${score}</p>
-            </div>`
+        document.addEventListener('DOMContentLoaded', function () {
+            fetch('/album_names')
+                .then(response => response.json())
+                .then(data => {
+                    window.recipeNames = data; // Store recipe names globally
+                })
+                .catch(error => console.error('Error fetching album names:', error));
+        });
+
+        function getAlbums() {
+            let userInput = document.getElementById("filter-text-val").value;
+            if (userInput.length > 0) {  // Ensure there is user input before making the call
+                fetch(`/get_titles?query=${encodeURIComponent(userInput)}`)
+                    .then(response => response.json())
+                    .then(data => showDropdown(userInput, data))  // Pass the returned data to the dropdown
+                    .catch(error => console.error('Error fetching names:', error));
+            } else {
+                showDropdown(userInput);  // Call with empty or default data if no input
+            }
         }
 
-        function sendFocus(id) {
-            document.getElementById(id).focus()
+
+
+        function showDropdown(userInput, names = []) {
+            const dropdown = document.getElementById("dropdown");
+            dropdown.innerHTML = "";  // Clear previous options
+            names.forEach(option => {
+                const optionDiv = document.createElement("div");
+                optionDiv.textContent = option;
+                console.log(optionDiv);
+                optionDiv.onclick = function () {
+                    document.getElementById("filter-text-val").value = option;
+                    dropdown.style.display = "none";
+                    storeUserInput(option);
+                };
+                dropdown.appendChild(optionDiv);
+                console.log(dropdown);
+            });
+            dropdown.style.display = names.length > 0 ? "block" : "none";
+        }
+
+
+        function storeUserInput(userInput) {
+            fetch('/store_user_input', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ userInput: userInput })
+            })
+                .then(response => response.json())
+                .catch((error) => console.error('Error storing user input:', error));
         }
 
         function filterText() {
@@ -120,6 +139,18 @@
                     document.getElementById("answer-box").appendChild(tempDiv)
                 }));
 
+        }
+
+        function answerBoxTemplate(title, composer, score) {
+            return `<div class=''>
+                <h3 class='episode-title'>${title}</h3>
+                <h3 class='compoer'>${composer}</h3>
+                <p class='episode-desc'>Similarity Score: ${score}</p>
+            </div>`
+        }
+
+        function sendFocus(id) {
+            document.getElementById(id).focus()
         }
 
     </script>

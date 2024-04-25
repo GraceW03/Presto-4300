@@ -1,6 +1,6 @@
 import json
 import os
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 from helpers.MySQLDatabaseHandler import MySQLDatabaseHandler
 import pandas as pd
@@ -45,6 +45,20 @@ def title_search(query):
     return matches_filtered_json
 
 #return similar classical titles based on input title query
+@app.route("/get_titles", methods=['GET'])
+def get_titles():
+    user_input = request.args.get('query','')
+    if user_input:
+        try:
+            filtered_names = find_similar_titles(user_input, titles_df)
+            print(filtered_names)
+            return jsonify(filtered_names)
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+    else:
+        return jsonify([])
+
+
 def find_similar_titles(query, dataset):
     vectorizer = TfidfVectorizer()
 
@@ -56,8 +70,7 @@ def find_similar_titles(query, dataset):
 
     top_indices = cosine_scores.argsort()[0][:][::-1]
     
-    top_titles = pd.DataFrame({"titles": [dataset.loc[i]['titles'] for i in top_indices], 
-                               "reviews": [dataset.loc[i]['reviews'] for i in top_indices]})
+    top_titles = [dataset.loc[i]['titles'] for i in top_indices[:5]]
     return top_titles
 
 
@@ -117,7 +130,8 @@ def SVD(input_album, df):
     similarity_scores.sort(key=lambda x: x[1], reverse=True)
 
     # Get the top similar albums
-    output = pd.DataFrame({"title": [s[0] for s in similarity_scores], "scores": [s[1] for s in similarity_scores]})
+    output = pd.DataFrame({"title": [s[0] for s in similarity_scores], 
+                           "scores": [s[1] for s in similarity_scores]})
     return output
 
 # Update similarity scores after SVD by filtering eras
@@ -203,6 +217,10 @@ def combine_rankings(dataset, title_input, composer_input, purpose_input, top_n=
 @app.route("/")
 def home():
     return render_template('base.html',title="sample html")
+
+@app.route("/album_names", methods=["GET"])
+def get_albums():
+    return jsonify(titles_df["titles"].to_list())
 
 
 @app.route("/albums")
