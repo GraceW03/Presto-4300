@@ -34,7 +34,7 @@
 
             <div class="input-box">
                 <img src="{{ url_for('static', filename='images/mag.png') }}" />
-                <select id="filter-text-genre">
+                <select id="filter-text-purpose">
                     <option value="" selected hidden>Select a purpose (optional)</option>
                     <option value="study" style="color:black">study</option>
                     <option value="exercise" style="color:black">exercise</option>
@@ -127,7 +127,7 @@
             console.log(document.getElementById("filter-text-val").value)
             fetch("/albums?" + new URLSearchParams({
                 title: document.getElementById("filter-text-val").value,
-                genre: document.getElementById("filter-text-genre").value,
+                purpose: document.getElementById("filter-text-purpose").value,
                 composer: document.getElementById("filter-text-composer").value
             }).toString())
                 .then((response) => response.json())

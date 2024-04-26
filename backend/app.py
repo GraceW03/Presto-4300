@@ -285,7 +285,8 @@ def get_albums():
 def albums_search():
     text = request.args.get("title")
     composer = request.args.get("composer")
-    return combine_rankings(titles_df, text, composer)
+    purpose = request.args.get("composer")
+    return combine_rankings(titles_df, text, composer, purpose)
 
 if 'DB_NAME' not in os.environ:
     app.run(debug=True,host="0.0.0.0",port=5000)
