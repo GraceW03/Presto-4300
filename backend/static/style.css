@@ -125,3 +125,7 @@ input {
     border-radius: 10px;
     border: black;
 }
+
+a {
+    color: black;
+}

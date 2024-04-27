@@ -38,33 +38,40 @@ CORS(app)
 
 #########################################################################################
 # find similarity between user input and albums for first step of search
-def first_step(query, dataset, k=5):
+def first_step(query, dataset, n=5):
     corpus = []
     for _, row in dataset.iterrows():
-        album = row['Album'] if not pd.isnull(row['Album']) else ""
-        review = row['Review'] if not pd.isnull(row['Review']) else ""
-        artist = row['Artist'] if not pd.isnull(row['Artist']) else ""
-        era = row['Era'] if not pd.isnull(row['Era']) else ""
+        album = row['titles'] if not pd.isnull(row['titles']) else ""
+        review = row['reviews'] if not pd.isnull(row['reviews']) else ""
+        artist = row['artists'] if not pd.isnull(row['artists']) else ""
+        era = row['eras'] if not pd.isnull(row['eras']) else ""
         row_data = ' '.join([album, review, artist, era])
         corpus.append(row_data)
 
     # from svd_demo-kickstarter-2024-inclass.ipynb
     vectorizer = TfidfVectorizer(stop_words = 'english', max_df = .7, min_df = 75)
     td_matrix = vectorizer.fit_transform(corpus)
-    docs_compressed, s, words_compressed = svds(td_matrix, k=40)
+    docs_compressed, s, words_compressed = svds(td_matrix, k=1000)
     words_compressed = words_compressed.transpose()
     word_to_index = vectorizer.vocabulary_
-    index_to_word = {i:t for t,i in word_to_index.items()}
-    words_compressed_normed = normalize(words_compressed, axis = 1)
+    # index_to_word = {i:t for t,i in word_to_index.items()}
+    # words_compressed_normed = normalize(words_compressed, axis = 1)
     docs_compressed_normed = normalize(docs_compressed)
 
     query_tfidf = vectorizer.transform([query]).toarray()
     query_vec = normalize(np.dot(query_tfidf, words_compressed)).squeeze()
 
     sims = docs_compressed_normed.dot(query_vec)
-    asort = np.argsort(-sims)[:k+1]
+    asort = np.argsort(-sims)[:n+1]
 
-    return [(i, dataset.iloc[i]["Album"], sims[i]) for i in asort[1:]]
+
+    top_titles = pd.DataFrame({
+        "title": dataset.loc[asort]['titles'].values,
+        "artists": dataset.loc[asort]['artists'].values,
+    })
+    print(top_titles)
+
+    return top_titles.to_json(orient='records')
         
     
 
@@ -125,25 +132,6 @@ def jaccard_similarity(set1, set2):
     intersection = len(set(set1).intersection(set2))
     union = len(set(set1).union(set2))
     return intersection / union if union != 0 else 0
-
-def inverted_index(album_name, dataset):
-    for index, name in enumerate(dataset["titles"]):
-        if album_name != name:
-            continue
-        else:
-            return index
-
-def theme_similarity_scores(input_album, dataset):
-    location = inverted_index(input_album, dataset)
-    input_themes = dataset["themes"][location]
-    similarity_scores = []
-    for themes in dataset["themes"]:
-        if input_themes == themes:
-            continue
-        else:
-            score = jaccard_similarity(input_themes, themes)
-            similarity_scores.append(score)
-    return similarity_scores
 
 def categorize_similarity(scores):
     # Define categories based on score ranges
@@ -327,9 +315,11 @@ def combine_rankings(dataset, title_input, composer_input, purpose_input, top_n=
 def home():
     return render_template('base.html',title="sample html")
 
-@app.route("/album_names", methods=["GET"])
-def get_albums():
-    return jsonify(titles_df["titles"].to_list())
+@app.route("/input")
+def get_first_step():
+   print("here1")
+   query = request.args.get("text")
+   return first_step(query, titles_df)
 
 
 @app.route("/albums")
@@ -338,6 +328,10 @@ def albums_search():
     composer = request.args.get("composer")
     purpose = request.args.get("composer")
     return combine_rankings(titles_df, text, composer, purpose)
+
+@app.route('/page_two')
+def login():
+    return render_template('page_two.html')
 
 if 'DB_NAME' not in os.environ:
     app.run(debug=True,host="0.0.0.0",port=5000)
