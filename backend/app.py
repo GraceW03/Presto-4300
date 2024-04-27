@@ -96,12 +96,20 @@ def jaccard_similarity(set1, set2):
     union = len(set(set1).union(set2))
     return intersection / union if union != 0 else 0
 
+### helper function
 def inverted_index(album_name, dataset):
     for index, name in enumerate(dataset["titles"]):
         if album_name != name:
             continue
         else:
             return index
+        
+### helper function
+def get_reviews(query, dataset):
+    index = inverted_index(query, dataset)
+    index_of_reviews_column = dataset.columns.get_loc('reviews')
+    album_row = dataset.iloc[index]
+    return album_row[index_of_reviews_column]
 
 def theme_similarity_scores(input_album, dataset):
     location = inverted_index(input_album, dataset)
@@ -130,45 +138,28 @@ def categorize_similarity(scores):
     return categories
 
 ####################################################################################################
-def find_similar_titles(query, dataset):
-    # Step 1: Vectorize titles
-    vectorizer_titles = TfidfVectorizer()
-    tfidf_matrix_titles = vectorizer_titles.fit_transform(dataset['titles'].fillna(""))
-
-    # Transform the query to fit the trained TF-IDF model for titles
-    query_vec_titles = vectorizer_titles.transform([query])
-
-    # Calculate cosine similarity between the query and the titles dataset
-    cosine_scores_titles = cosine_similarity(query_vec_titles, tfidf_matrix_titles).flatten()
-    max_title_score = np.max(cosine_scores_titles) if np.max(cosine_scores_titles) != 0 else 1
-    normalized_titles_scores = cosine_scores_titles / max_title_score
-
-    # Step 2: Apply SVD on reviews to capture semantic similarities
-    vectorizer_reviews = TfidfVectorizer(stop_words='english', max_features=1000)
+def find_similar_reviews(query, dataset):
+    # Vectorize reviews
+    vectorizer_reviews = TfidfVectorizer()
     tfidf_matrix_reviews = vectorizer_reviews.fit_transform(dataset['reviews'].fillna(""))
 
-    # Apply SVD
-    svd_model = TruncatedSVD(n_components=min(1000, tfidf_matrix_reviews.shape[1] - 1))
-    latent_matrix_reviews = svd_model.fit_transform(tfidf_matrix_reviews)
+    # Transform the query to fit the trained TF-IDF model for reviews
+    query_vec_reviews = vectorizer_reviews.transform([get_reviews[query, dataset]])
 
-    # Compute cosine similarities using the low-dimensional space created by SVD
-    svd_query_review = svd_model.transform(vectorizer_reviews.transform([query]))
-    cosine_scores_reviews = cosine_similarity(svd_query_review, latent_matrix_reviews).flatten()
-    max_review_score = np.max(cosine_scores_reviews) if np.max(cosine_scores_reviews) != 0 else 1
-    normalized_reviews_scores = cosine_scores_reviews / max_review_score
+    # Calculate cosine similarity between the query and the titles dataset
+    cosine_scores_reviews = cosine_similarity(query_vec_reviews, tfidf_matrix_reviews).flatten()
+    max_reviews_score = np.max(cosine_scores_reviews) if np.max(cosine_scores_reviews) != 0 else 1
+    normalized_reviews_scores = cosine_scores_reviews / max_reviews_score
 
-    # Step 3: Combine normalized scores (50% each from titles and reviews)
-    combined_scores = 0.5 * normalized_titles_scores + 0.5 * normalized_reviews_scores
+    # Sort indices based on normalized reviews scores
+    top_indices = normalized_reviews_scores.argsort()[::-1]
 
-    # Sort indices based on combined scores
-    top_indices = combined_scores.argsort()[::-1]
-
-    # Step 4: Create DataFrame with the combined top results
+    # Create DataFrame with the combined top results
     top_titles = pd.DataFrame({
         "titles": dataset.iloc[top_indices]['titles'].values,
         "artists": dataset.iloc[top_indices]['artists'].values,
         "reviews": dataset.iloc[top_indices]['reviews'].values,
-        "scores": combined_scores[top_indices]  # Include combined scores for reference
+        "scores": normalized_reviews_scores[top_indices]  # Include normalized reviews scores for reference
     })
 
     return top_titles
@@ -212,17 +203,17 @@ def find_similar_composers(query, dataset):
 
     return top_composers
 
-def combine_title_and_composer_search(title_query, composer_query, dataset):
+def combine_review_and_composer_search(title_query, composer_query, dataset):
     # Retrieve similar titles based on the title query
-    similar_titles = find_similar_titles(title_query, dataset)
+    similar_reviews = find_similar_reviews(title_query, dataset)
     
     # Retrieve similar composers based on the composer query
     similar_composers = find_similar_composers(composer_query, dataset)
     
     # Merge the results on common titles, averaging the scores
-    if not similar_titles.empty and not similar_composers.empty:
-        combined_results = pd.merge(similar_titles, similar_composers, on=['titles', 'artists', 'reviews'], suffixes=('_title', '_composer'))
-        combined_results['scores'] = (combined_results['scores_title'] + combined_results['scores_composer']) / 2
+    if not similar_reviews.empty and not similar_composers.empty:
+        combined_results = pd.merge(similar_reviews, similar_composers, on=['titles', 'artists', 'reviews'], suffixes=('_review', '_composer'))
+        combined_results['scores'] = (combined_results['scores_review'] + combined_results['scores_composer']) / 2
     else:
         return pd.DataFrame()  # Return empty if any of the searches yield no results
 
