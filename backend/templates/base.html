@@ -16,9 +16,10 @@
                 <h1 id="google-3">3</h1>
                 <h1 id="google-0-1">0</h1>
                 <h1 id="google-0-2">0</h1> -->
-                <h1>Presto</h1>
+                <a href="base.html">
+                    <h1>Presto</h1>
+                </a>
             </div>
-
 
 
 
@@ -27,29 +28,16 @@
                 <input placeholder="Search for a classical album" id="filter-text-val">
             </div>
 
-            <div class="input-box" onclick="sendFocus('filter-text-composer')">
-                <img src="{{ url_for('static', filename='images/mag.png') }}" />
-                <input placeholder="Search for a composer" id="filter-text-composer">
-            </div>
-
-            <div class="input-box">
-                <img src="{{ url_for('static', filename='images/mag.png') }}" />
-                <select id="filter-text-purpose">
-                    <option value="" selected hidden>Select a purpose (optional)</option>
-                    <option value="study" style="color:black">study</option>
-                    <option value="exercise" style="color:black">exercise</option>
-                    <option value="relax" style="color:black">relax</option>
-                    <option value="sleep" style="color:black">sleep</option>
-                </select>
-            </div>
 
         </div>
 
         <br>
 
+        <!-- submit button (to remove) -->
         <div class="submit-button-container">
-            <button onclick="filterText()">Submit Inputs</button>
+            <button onclick="filterText()">Next Step</button>
         </div>
+        <!-- submit button -->
 
 
         <div id="answer-box">
@@ -91,23 +79,23 @@
 
 
 
-        function showDropdown(userInput, names = []) {
-            const dropdown = document.getElementById("dropdown");
-            dropdown.innerHTML = "";  // Clear previous options
-            names.forEach(option => {
-                const optionDiv = document.createElement("div");
-                optionDiv.textContent = option;
-                console.log(optionDiv);
-                optionDiv.onclick = function () {
-                    document.getElementById("filter-text-val").value = option;
-                    dropdown.style.display = "none";
-                    storeUserInput(option);
-                };
-                dropdown.appendChild(optionDiv);
-                console.log(dropdown);
-            });
-            dropdown.style.display = names.length > 0 ? "block" : "none";
-        }
+        // function showDropdown(userInput, names = []) {
+        //     const dropdown = document.getElementById("dropdown");
+        //     dropdown.innerHTML = "";  // Clear previous options
+        //     names.forEach(option => {
+        //         const optionDiv = document.createElement("div");
+        //         optionDiv.textContent = option;
+        //         console.log(optionDiv);
+        //         optionDiv.onclick = function () {
+        //             document.getElementById("filter-text-val").value = option;
+        //             dropdown.style.display = "none";
+        //             storeUserInput(option);
+        //         };
+        //         dropdown.appendChild(optionDiv);
+        //         console.log(dropdown);
+        //     });
+        //     dropdown.style.display = names.length > 0 ? "block" : "none";
+        // }
 
 
         function storeUserInput(userInput) {

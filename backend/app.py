@@ -8,6 +8,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.decomposition import TruncatedSVD
 from scipy.sparse.linalg import svds
+from sklearn.preprocessing import normalize
 import numpy as np
 
 # ROOT_PATH for linking with all your files. 
@@ -37,17 +38,46 @@ CORS(app)
 
 #########################################################################################
 # find similarity between user input and albums for first step of search
-def first_step(dataset):
-    vectorizer = TfidfVectorizer()
-    td_matrix = vectorizer.fit_transform(dataset)
+def first_step(query, dataset, k=5):
+    corpus = []
+    for _, row in dataset.iterrows():
+        album = row['Album'] if not pd.isnull(row['Album']) else ""
+        review = row['Review'] if not pd.isnull(row['Review']) else ""
+        artist = row['Artist'] if not pd.isnull(row['Artist']) else ""
+        era = row['Era'] if not pd.isnull(row['Era']) else ""
+        row_data = ' '.join([album, review, artist, era])
+        corpus.append(row_data)
+
     # from svd_demo-kickstarter-2024-inclass.ipynb
-    u, s, v_trans = svds(td_matrix)
+    vectorizer = TfidfVectorizer(stop_words = 'english', max_df = .7, min_df = 75)
+    td_matrix = vectorizer.fit_transform(corpus)
     docs_compressed, s, words_compressed = svds(td_matrix, k=40)
     words_compressed = words_compressed.transpose()
+    word_to_index = vectorizer.vocabulary_
+    index_to_word = {i:t for t,i in word_to_index.items()}
+    words_compressed_normed = normalize(words_compressed, axis = 1)
+    docs_compressed_normed = normalize(docs_compressed)
 
+    query_tfidf = vectorizer.transform([query]).toarray()
+    query_vec = normalize(np.dot(query_tfidf, words_compressed)).squeeze()
 
+    sims = docs_compressed_normed.dot(query_vec)
+    asort = np.argsort(-sims)[:k+1]
+
+    return [(i, dataset.iloc[i]["Album"], sims[i]) for i in asort[1:]]
+        
     
 
+
+
+
+
+
+# demo code for similarity function
+# def closest_projects_to_query(query_vec_in, k = 5):
+#     sims = docs_compressed_normed.dot(query_vec_in)
+#     asort = np.argsort(-sims)[:k+1]
+#     return [(i, documents.iloc(i)["Album"],sims[i]) for i in asort[1:]]
 
 
 
@@ -76,7 +106,7 @@ def get_titles():
         return jsonify([])
 
 
-def find_similar_titles(query, dataset):
+def find_similar_title(query, dataset):
     vectorizer = TfidfVectorizer()
 
     tfidf_matrix = vectorizer.fit_transform(dataset['titles'].fillna(""))
@@ -153,7 +183,7 @@ def find_similar_titles(query, dataset):
 
     # Compute cosine similarities using the low-dimensional space created by SVD
     svd_query_review = svd_model.transform(vectorizer_reviews.transform([query]))
-    cosine_scores_reviews = cosine_similarity(svd_query_review, latent_matrix_reviews).flatten()
+    cosine_scores_reviews = cosine_similarity(tfidf_matrix_reviews, latent_matrix_reviews).flatten()
     max_review_score = np.max(cosine_scores_reviews) if np.max(cosine_scores_reviews) != 0 else 1
     normalized_reviews_scores = cosine_scores_reviews / max_review_score
 
@@ -171,6 +201,27 @@ def find_similar_titles(query, dataset):
         "scores": combined_scores[top_indices]  # Include combined scores for reference
     })
 
+    return top_titles
+
+def cos_sim_album(title_input, dataset):
+    album_index = title_reverse_index[title_input]
+
+    vectorizer = TfidfVectorizer()
+
+    tfidf_matrix = vectorizer.fit_transform(dataset['reviews'])
+
+    query_vec = vectorizer.transform([dataset.iloc[album_index]['reviews']])
+
+    cosine_scores = cosine_similarity(query_vec, tfidf_matrix)
+
+    top_indices = cosine_scores.argsort()[0][:][::-1]
+
+    top_titles = pd.DataFrame({
+        "titles": dataset.loc[top_indices]['titles'].values,
+        "artists": dataset.loc[top_indices]['artists'].values,
+        "reviews": dataset.loc[top_indices]['reviews'].values,
+        "scores": cosine_scores[top_indices]  # Include final scores for reference
+    })
     return top_titles
 
 def find_similar_composers(query, dataset):
