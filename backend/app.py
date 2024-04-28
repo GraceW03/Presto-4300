@@ -32,6 +32,7 @@ with open(json_file_path, 'r') as file:
 
 title_reverse_index = {t: i for i, t in enumerate(titles_df["titles"])}
 composer_reverse_index = {t: i for i, t in enumerate(titles_df["artists"])}
+global_title = None
 
 app = Flask(__name__)
 CORS(app)
@@ -256,29 +257,29 @@ def combine_review_and_composer_search(title_query, composer_query, dataset):
 
 
 ####################################################################################################
-def combine_rankings(dataset, title_input, composer_input, purpose_input, top_n=10):
+def combine_rankings(dataset, title_input, composer_input, top_n=10):
     ''' 
     Get a list of rankings from each algorithm, then will weight avg to 
     get final result
     '''
     if composer_input and title_input:
-        top_titles_artists = combine_title_and_composer_search(title_input, composer_input, dataset)
+        top_titles_artists = combine_review_and_composer_search(title_input, composer_input, dataset)
         output = top_titles_artists.iloc[:top_n]
 
     elif title_input:
-        top_titles = find_similar_titles(title_input, dataset)
+        top_titles = find_similar_reviews(title_input, dataset)
         output = top_titles.iloc[:top_n]
 
     elif composer_input:
         top_composers = find_similar_composers(composer_input, dataset)
         output = top_composers.iloc[:top_n]
 
-    if purpose_input != "Select a purpose (optional)":
-        pass #TODO
+    # have to add explainbility by showing common words/first two lines of reviews
 
     # Extracting relevant information for output
     titles = output["titles"].tolist()
     artists = output["artists"].tolist()
+    eras = output["eras"].tolist()
     scores = output["scores"].tolist()
 
     # Create DataFrame with categorized scores
@@ -309,18 +310,32 @@ def get_first_step():
 def albums_search():
     text = request.args.get("title")
     composer = request.args.get("composer")
-    purpose = request.args.get("composer")
-    return combine_rankings(titles_df, text, composer, purpose)
+    # purpose = request.args.get("composer")
+    return combine_rankings(titles_df, text, composer)
 
 # function for multiple pages from 
 # https://stackoverflow.com/questions/67351167/one-flask-with-multiple-page
 @app.route('/page_two')
-def login():
+def page_two():
     return render_template('page_two.html')
 
 @app.route('/home')
-def login():
+def go_home():
     return render_template('base.html')
+
+@app.route('/store_title', methods=['POST'])
+def store_title():
+    print("storing title...")
+    global global_title 
+    title = request.json.get("title_input")
+    global_title = title
+    print("title stored")
+    print(global_title)
+    return render_template('page_two.html')
+
+@app.route('/get_title')
+def get_title():
+    return json.dumps(global_title)
 
 if 'DB_NAME' not in os.environ:
     app.run(debug=True,host="0.0.0.0",port=5000)

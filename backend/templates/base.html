@@ -12,7 +12,7 @@
     <div class="full-body-container">
         <div class="top-text">
             <div class="google-colors">
-                <a href="base.html">
+                <a href="home">
                     <h1>Presto</h1>
                 </a>
             </div>
@@ -36,7 +36,7 @@
         <!-- submit button -->
 
 
-        <div id="input-suggestions">
+        <div id="input-container">
 
         </div>
     </div>
@@ -52,37 +52,39 @@
 
     <script>
 
-        function storeUserInput(userInput) {
-            fetch('/store_user_input', {
+        // store the title in the backend
+        function storeTitle(title) {
+            fetch('/store_title', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ userInput: userInput })
+                body: JSON.stringify({ title_input: title })
             })
                 .then(response => response.json())
-                .catch((error) => console.error('Error storing user input:', error));
-        }
-
-        function storeUserInput(title) {
-
         }
 
         function firstStepFilter() {
-            document.getElementById("input-suggestions").innerHTML = ""
+            document.getElementById("input-container").innerHTML = ""
             console.log(document.getElementById("input-val").value)
             fetch("/input?" + new URLSearchParams({
                 text: document.getElementById("input-val").value,
             }).toString())
                 .then((response) => response.json())
                 .then((data) => data.forEach(row => {
-                    let tempDiv = document.createElement("div")
-                    // get title, composer, description (TODO) 
-                    tempDiv.innerHTML = "<a href='page_two'>" + inputTemplate(row.title, row.artist) + "<"
-                    // tempDiv.onclick = storeTitle(row.title)
-                    document.getElementById("input-suggestions").appendChild(tempDiv)
-                }));
+                    let buttonElement = document.createElement("button")
+                    buttonElement.classList.add("input-button")
+                    buttonElement.innerHTML = inputTemplate(row.title, row.artist)
+                    buttonElement.onclick = function () {
+                        storeTitle(row.title)
+                    }
 
+                    //let tempDiv = document.createElement("div")
+                    // get title, composer, description (TODO) 
+                    // tempDiv.onclick = storeTitle(row.title)
+                    //tempDiv.innerHTML = "<a href='page_two'>" + inputTemplate(row.title, row.artist) + "</a>"
+                    document.getElementById("input-container").appendChild(buttonElement)
+                }));
         }
 
         // function filterText() {
@@ -105,8 +107,8 @@
 
         function inputTemplate(title, composer) {
             return `<div class='input-output'>
-                <h3 class='episode-title'>${title}</h3>
-                <h3 class='compoer'>${composer}</h3>
+                    <h3 class='episode-title'>${title}</h3>
+                    <h3 class='compoer'>${composer}</h3>
             </div>`
         }
 
