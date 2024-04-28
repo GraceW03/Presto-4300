@@ -29,12 +29,15 @@ with open(json_file_path, 'r') as file:
     reviews = data['review'].values()
     titles = data['title'].values()
     eras = data['era'].values()
+<<<<<<< HEAD
     joy = data['joy'].values()
     sadness = data['sadness'].values()
     fear = data['fear'].values()
     anger = data['anger'].values()
     neutral = data['neutral'].values()
     emotions_df = pd.DataFrame({ "joy":joy, "sadness":sadness, "fear":fear, "anger":anger, "neutral":neutral})
+=======
+>>>>>>> refs/remotes/origin/master
     titles_df = pd.DataFrame({"title": titles, "composer": artists, "review": reviews, "era": eras})
 
 title_reverse_index = {t: i for i, t in enumerate(titles_df["title"])}
