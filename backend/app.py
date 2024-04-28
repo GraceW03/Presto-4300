@@ -27,10 +27,10 @@ with open(json_file_path, 'r') as file:
     reviews = data['Review'].values()
     titles = data['Album'].values()
     eras = data['Era'].values()
-    titles_df = pd.DataFrame({"titles": titles, "artists": artists, "reviews": reviews, "eras": eras})
+    titles_df = pd.DataFrame({"title": titles, "composer": artists, "review": reviews, "era": eras})
 
-title_reverse_index = {t: i for i, t in enumerate(titles_df["titles"])}
-composer_reverse_index = {t: i for i, t in enumerate(titles_df["artists"])}
+title_reverse_index = {t: i for i, t in enumerate(titles_df["title"])}
+composer_reverse_index = {t: i for i, t in enumerate(titles_df["composer"])}
 
 app = Flask(__name__)
 CORS(app)
@@ -79,7 +79,7 @@ def get_titles():
 def find_similar_titles(query, dataset):
     vectorizer = TfidfVectorizer()
 
-    tfidf_matrix = vectorizer.fit_transform(dataset['titles'].fillna(""))
+    tfidf_matrix = vectorizer.fit_transform(dataset['title'].fillna(""))
 
     query_vec = vectorizer.transform([query])
 
@@ -87,7 +87,7 @@ def find_similar_titles(query, dataset):
 
     top_indices = cosine_scores.argsort()[0][:][::-1]
     
-    top_titles = [dataset.loc[i]['titles'] for i in top_indices[:5]]
+    top_titles = [dataset.loc[i]['title'] for i in top_indices[:5]]
     return top_titles
 
 
@@ -107,7 +107,7 @@ def inverted_index(album_name, dataset):
 ### helper function
 def get_reviews(query, dataset):
     index = inverted_index(query, dataset)
-    index_of_reviews_column = dataset.columns.get_loc('reviews')
+    index_of_reviews_column = dataset.columns.get_loc('review')
     album_row = dataset.iloc[index]
     return album_row[index_of_reviews_column]
 
@@ -141,7 +141,7 @@ def categorize_similarity(scores):
 def find_similar_reviews(query, dataset):
     # Vectorize reviews
     vectorizer_reviews = TfidfVectorizer()
-    tfidf_matrix_reviews = vectorizer_reviews.fit_transform(dataset['reviews'].fillna(""))
+    tfidf_matrix_reviews = vectorizer_reviews.fit_transform(dataset['review'].fillna(""))
 
     # Transform the query to fit the trained TF-IDF model for reviews
     query_vec_reviews = vectorizer_reviews.transform([get_reviews[query, dataset]])
@@ -156,17 +156,17 @@ def find_similar_reviews(query, dataset):
 
     # Create DataFrame with the combined top results
     top_titles = pd.DataFrame({
-        "titles": dataset.iloc[top_indices]['titles'].values,
-        "artists": dataset.iloc[top_indices]['artists'].values,
-        "reviews": dataset.iloc[top_indices]['reviews'].values,
-        "scores": normalized_reviews_scores[top_indices]  # Include normalized reviews scores for reference
+        "title": dataset.iloc[top_indices]['title'].values,
+        "composer": dataset.iloc[top_indices]['composer'].values,
+        "review": dataset.iloc[top_indices]['review'].values,
+        "score": normalized_reviews_scores[top_indices]  # Include normalized reviews scores for reference
     })
 
     return top_titles
 
 def find_similar_composers(query, dataset):
     # Normalize the input and create a copy of the dataset for manipulation
-    artists_normalized = dataset['artists'].str.lower()
+    artists_normalized = dataset['composer'].str.lower()
 
     # Vectorize the artist names
     vectorizer = TfidfVectorizer()
@@ -180,10 +180,10 @@ def find_similar_composers(query, dataset):
 
     # Determine the era of the input artist based on the highest cosine similarity
     top_index = cosine_scores.argmax()
-    input_artist_era = dataset.iloc[top_index]['eras']
+    input_artist_era = dataset.iloc[top_index]['era']
 
     # Calculate era scores (1 if matching era, 0 otherwise)
-    era_scores = (dataset['eras'] == input_artist_era).astype(int)
+    era_scores = (dataset['era'] == input_artist_era).astype(int)
 
     # Normalize scores to ensure fair weighting
     normalized_cosine_scores = cosine_scores / cosine_scores.max()
@@ -195,10 +195,10 @@ def find_similar_composers(query, dataset):
 
     # Create a DataFrame of the top similar artists after reranking
     top_composers = pd.DataFrame({
-        "titles": dataset.loc[reranked_indices]['titles'].values,
-        "artists": dataset.loc[reranked_indices]['artists'].values,
-        "reviews": dataset.loc[reranked_indices]['reviews'].values,
-        "scores": final_scores[reranked_indices]  # Include final scores for reference
+        "title": dataset.loc[reranked_indices]['title'].values,
+        "composer": dataset.loc[reranked_indices]['composer'].values,
+        "review": dataset.loc[reranked_indices]['review'].values,
+        "score": final_scores[reranked_indices]  # Include final scores for reference
     })
 
     return top_composers
@@ -212,16 +212,16 @@ def combine_review_and_composer_search(title_query, composer_query, dataset):
     
     # Merge the results on common titles, averaging the scores
     if not similar_reviews.empty and not similar_composers.empty:
-        combined_results = pd.merge(similar_reviews, similar_composers, on=['titles', 'artists', 'reviews'], suffixes=('_review', '_composer'))
-        combined_results['scores'] = (combined_results['scores_review'] + combined_results['scores_composer']) / 2
+        combined_results = pd.merge(similar_reviews, similar_composers, on=['title', 'composer', 'review'], suffixes=('_review', '_composer'))
+        combined_results['score'] = (combined_results['score_review'] + combined_results['score_composer']) / 2
     else:
         return pd.DataFrame()  # Return empty if any of the searches yield no results
 
     # Sort by the combined score in descending order
-    combined_results = combined_results.sort_values(by='scores', ascending=False)
+    combined_results = combined_results.sort_values(by='score', ascending=False)
 
     # Return the top N results
-    return combined_results[['titles', 'artists', 'reviews', 'scores']]
+    return combined_results[['title', 'composer', 'review', 'score']]
 
 
 ####################################################################################################
@@ -231,7 +231,7 @@ def combine_rankings(dataset, title_input, composer_input, purpose_input, top_n=
     get final result
     '''
     if composer_input and title_input:
-        top_titles_artists = combine_title_and_composer_search(title_input, composer_input, dataset)
+        top_titles_artists = combine_review_and_composer_search(title_input, composer_input, dataset)
         output = top_titles_artists.iloc[:top_n]
 
     elif title_input:
@@ -247,14 +247,14 @@ def combine_rankings(dataset, title_input, composer_input, purpose_input, top_n=
 
     # Extracting relevant information for output
     titles = output["titles"].tolist()
-    artists = output["artists"].tolist()
+    artists = output["composer"].tolist()
     scores = output["scores"].tolist()
 
     # Create DataFrame with categorized scores
     new_output = pd.DataFrame({
         "title": titles,
-        "artists": artists,
-        "scores": scores  # Use the categorized similarity labels
+        "composer": artists,
+        "score": scores  # Use the categorized similarity labels
     })
 
     # Convert DataFrame to JSON
