@@ -48,15 +48,21 @@ def first_step(query, dataset, n=5):
         row_data = ' '.join([album, review, artist, era])
         corpus.append(row_data)
 
+    # corpus = dataset["titles"].str.cat([dataset['reviews'], dataset['artists'], 
+    #                                     dataset['eras']], sep =" ").to_list()
+
+    print("made corpus")
+
     # from svd_demo-kickstarter-2024-inclass.ipynb
-    vectorizer = TfidfVectorizer(stop_words = 'english', max_df = .7, min_df = 75)
+    vectorizer = TfidfVectorizer(stop_words = 'english', max_df = .7, min_df = 50)
     td_matrix = vectorizer.fit_transform(corpus)
-    docs_compressed, s, words_compressed = svds(td_matrix, k=1000)
+    docs_compressed, s, words_compressed = svds(td_matrix, k=100)
     words_compressed = words_compressed.transpose()
-    word_to_index = vectorizer.vocabulary_
+    # word_to_index = vectorizer.vocabulary_
     # index_to_word = {i:t for t,i in word_to_index.items()}
     # words_compressed_normed = normalize(words_compressed, axis = 1)
     docs_compressed_normed = normalize(docs_compressed)
+    print("compressed")
 
     query_tfidf = vectorizer.transform([query]).toarray()
     query_vec = normalize(np.dot(query_tfidf, words_compressed)).squeeze()
@@ -69,7 +75,7 @@ def first_step(query, dataset, n=5):
         "title": dataset.loc[asort]['titles'].values,
         "artists": dataset.loc[asort]['artists'].values,
     })
-    print(top_titles)
+    # print(top_titles)
 
     return top_titles.to_json(orient='records')
         
@@ -329,6 +335,8 @@ def albums_search():
     purpose = request.args.get("composer")
     return combine_rankings(titles_df, text, composer, purpose)
 
+# function for multiple pages from 
+# https://stackoverflow.com/questions/67351167/one-flask-with-multiple-page
 @app.route('/page_two')
 def login():
     return render_template('page_two.html')

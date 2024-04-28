@@ -36,7 +36,7 @@
         <!-- submit button -->
 
 
-        <div id="answer-box">
+        <div id="input-suggestions">
 
         </div>
     </div>
@@ -69,7 +69,7 @@
         }
 
         function firstStepFilter() {
-            document.getElementById("answer-box").innerHTML = ""
+            document.getElementById("input-suggestions").innerHTML = ""
             console.log(document.getElementById("input-val").value)
             fetch("/input?" + new URLSearchParams({
                 text: document.getElementById("input-val").value,
@@ -78,30 +78,36 @@
                 .then((data) => data.forEach(row => {
                     let tempDiv = document.createElement("div")
                     // get title, composer, description (TODO) 
-                    tempDiv.innerHTML = "<a href='page_two'>" + answerBoxTemplate(row.title, row.artist)
+                    tempDiv.innerHTML = "<a href='page_two'>" + inputTemplate(row.title, row.artist)
                     // tempDiv.onclick = storeTitle(row.title)
-                    document.getElementById("answer-box").appendChild(tempDiv)
+                    document.getElementById("input-suggestions").appendChild(tempDiv)
                 }));
 
         }
 
-        function filterText() {
-            document.getElementById("answer-box").innerHTML = ""
-            console.log(document.getElementById("filter-text-val").value)
-            fetch("/albums?" + new URLSearchParams({
-                title: document.getElementById("filter-text-val").value,
-                purpose: document.getElementById("filter-text-purpose").value,
-                composer: document.getElementById("filter-text-composer").value
-            }).toString())
-                .then((response) => response.json())
-                .then((data) => data.forEach(row => {
+        // function filterText() {
+        //     document.getElementById("input-suggestions").innerHTML = ""
+        //     console.log(document.getElementById("filter-text-val").value)
+        //     fetch("/albums?" + new URLSearchParams({
+        //         title: document.getElementById("filter-text-val").value,
+        //         purpose: document.getElementById("filter-text-purpose").value,
+        //         composer: document.getElementById("filter-text-composer").value
+        //     }).toString())
+        //         .then((response) => response.json())
+        //         .then((data) => data.forEach(row => {
+        //             let tempDiv = document.createElement("div")
+        //             // get title, composer, description (TODO) 
+        //             tempDiv.innerHTML = inputTemplate(row.title, row.artists)
+        //             document.getElementById("input-suggestions").appendChild(tempDiv)
+        //         }));
 
-                    let tempDiv = document.createElement("div")
-                    // get title, composer, description (TODO) 
-                    tempDiv.innerHTML = answerBoxTemplate(row.title, row.artists, row.scores)
-                    document.getElementById("answer-box").appendChild(tempDiv)
-                }));
+        // }
 
+        function inputTemplate(title, composer) {
+            return `<div class='input-output'>
+                <h3 class='episode-title'>${title}</h3>
+                <h3 class='compoer'>${composer}</h3>
+            </div>`
         }
 
         function answerBoxTemplate(title, composer, score) {
