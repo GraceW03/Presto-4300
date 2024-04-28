@@ -23,10 +23,10 @@ json_file_path = os.path.join(current_directory, 'init.json')
 # Assuming your JSON data is stored in a file named 'init.json'
 with open(json_file_path, 'r') as file:
     data = json.load(file)
-    artists = data['Artist'].values()
-    reviews = data['Review'].values()
-    titles = data['Album'].values()
-    eras = data['Era'].values()
+    artists = data['composer'].values()
+    reviews = data['review'].values()
+    titles = data['title'].values()
+    eras = data['era'].values()
     titles_df = pd.DataFrame({"title": titles, "composer": artists, "review": reviews, "era": eras})
 
 title_reverse_index = {t: i for i, t in enumerate(titles_df["title"])}
