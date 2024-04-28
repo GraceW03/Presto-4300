@@ -110,18 +110,25 @@ input {
 }
 
 .input-output {
-    width: 700px;
-    margin: 50px;
+    margin: 20px;
+
+}
+
+#input-container {
+    display: flex;
+    border-style: none;
+}
+
+#input-container button {
+    outline-style: none;
+    margin: 20px;
+    width: 200px;
     background-color: floralwhite;
     /* margin-bottom: 50px;
     marin */
     border-radius: 10px;
     border: 1px solid black;
-    padding: 20px;
-}
 
-#input-suggestions {
-    display: flex;
 }
 
 .episode-title {

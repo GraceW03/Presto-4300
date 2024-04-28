@@ -323,7 +323,7 @@ def page_two():
 def go_home():
     return render_template('base.html')
 
-@app.route('/store_title', methods=['POST'])
+@app.route('/store_title', methods=["POST"])
 def store_title():
     print("storing title...")
     global global_title 
