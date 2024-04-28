@@ -9,6 +9,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.decomposition import TruncatedSVD
 from scipy.sparse.linalg import svds
 import numpy as np
+from numpy.linalg import svd
+from scipy.spatial.distance import cdist
 
 # ROOT_PATH for linking with all your files. 
 # Feel free to use a config.py or settings.py with a global export variable
@@ -23,10 +25,16 @@ json_file_path = os.path.join(current_directory, 'init.json')
 # Assuming your JSON data is stored in a file named 'init.json'
 with open(json_file_path, 'r') as file:
     data = json.load(file)
-    artists = data['Artist'].values()
-    reviews = data['Review'].values()
-    titles = data['Album'].values()
-    eras = data['Era'].values()
+    artists = data['composer'].values()
+    reviews = data['review'].values()
+    titles = data['title'].values()
+    eras = data['era'].values()
+    joy = data['joy'].values()
+    sadness = data['sadness'].values()
+    fear = data['fear'].values()
+    anger = data['anger'].values()
+    neutral = data['neutral'].values()
+    emotions_df = pd.DataFrame({ "joy":joy, "sadness":sadness, "fear":fear, "anger":anger, "neutral":neutral})
     titles_df = pd.DataFrame({"title": titles, "composer": artists, "review": reviews, "era": eras})
 
 title_reverse_index = {t: i for i, t in enumerate(titles_df["title"])}
@@ -45,12 +53,41 @@ def first_step(dataset):
     docs_compressed, s, words_compressed = svds(td_matrix, k=40)
     words_compressed = words_compressed.transpose()
 
+#########################################################################################
+# find similarity between albums based on emotion:
 
+# Define the do_svd function as provided
+def do_svd(mat, k=0, option=False):
+    U, Sigma, VT = svd(mat)
+    U = pd.DataFrame(U[:, :k])
+    VT = pd.DataFrame(VT[:k, :])
+    if option:
+        return Sigma
+    else:
+        return U, VT
+
+# Define the find_similar_album_by_emotion function that incorporates the SVD and cosine similarity
+def find_similar_album_by_emotion(emotion_df, query_index, top_k=10):
+    # Apply SVD to the dataframe
+    U = do_svd(emotion_df, k=5)[0]
     
-
-
-
-
+    # Check if query_index is within bounds
+    if query_index >= len(U):
+        raise ValueError(f"Query index {query_index} is out of bounds for the DataFrame. Maximum valid index is {len(U) - 1}.")
+    
+    # Compute cosine similarity
+    query_row = U.iloc[query_index, :].values.reshape(1, -1)
+    similarities = 1 - cdist(query_row, U, metric='cosine').flatten()
+    
+    # Get indices of rows in U sorted by similarity (excluding the query row itself)
+    similar_indices = np.argsort(-similarities)
+    similar_indices = similar_indices[similar_indices != query_index][:top_k]
+    
+    # Get the similarity scores and vectors for the similar rows
+    similar_scores = similarities[similar_indices]
+    similar_vectors = U.iloc[similar_indices].values
+    
+    return similar_indices, similar_scores, similar_vectors
 
 
 ####################################################################################################
