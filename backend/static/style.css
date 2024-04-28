@@ -111,9 +111,10 @@ input {
 
 .input-output {
     width: 700px;
-    margin-top: 50px;
+    margin: 50px;
     background-color: floralwhite;
-    margin-bottom: 50px;
+    /* margin-bottom: 50px;
+    marin */
     border-radius: 10px;
     border: 1px solid black;
     padding: 20px;

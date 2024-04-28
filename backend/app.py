@@ -341,5 +341,9 @@ def albums_search():
 def login():
     return render_template('page_two.html')
 
+@app.route('/home')
+def login():
+    return render_template('base.html')
+
 if 'DB_NAME' not in os.environ:
     app.run(debug=True,host="0.0.0.0",port=5000)

@@ -78,7 +78,7 @@
                 .then((data) => data.forEach(row => {
                     let tempDiv = document.createElement("div")
                     // get title, composer, description (TODO) 
-                    tempDiv.innerHTML = "<a href='page_two'>" + inputTemplate(row.title, row.artist)
+                    tempDiv.innerHTML = "<a href='page_two'>" + inputTemplate(row.title, row.artist) + "<"
                     // tempDiv.onclick = storeTitle(row.title)
                     document.getElementById("input-suggestions").appendChild(tempDiv)
                 }));
@@ -110,13 +110,13 @@
             </div>`
         }
 
-        function answerBoxTemplate(title, composer, score) {
-            return `<div class=''>
-                <h3 class='episode-title'>${title}</h3>
-                <h3 class='compoer'>${composer}</h3>
-                <p class='episode-desc'>Similarity Score: ${score}</p>
-            </div>`
-        }
+        // function answerBoxTemplate(title, composer, score) {
+        //     return `<div class=''>
+        //         <h3 class='episode-title'>${title}</h3>
+        //         <h3 class='compoer'>${composer}</h3>
+        //         <p class='episode-desc'>Similarity Score: ${score}</p>
+        //     </div>`
+        // }
 
         function sendFocus(id) {
             document.getElementById(id).focus()
