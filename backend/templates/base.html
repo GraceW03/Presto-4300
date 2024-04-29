@@ -61,19 +61,7 @@
                 },
                 body: JSON.stringify({ title_input: title })
             })
-                .then(response => {
-                    if (response.ok) {
-                        return response.text(); // Assuming server responds with text/html
-                    } else {
-                        throw new Error('Request failed!');
-                    }
-                })
-                .then(data => {
-                    document.body.innerHTML = data; // Replace the current page content with the new content
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
+                .then(response => response.json())
         }
 
         function firstStepFilter() {
@@ -86,7 +74,7 @@
                 .then((data) => data.forEach(row => {
                     let buttonElement = document.createElement("button")
                     buttonElement.classList.add("input-button")
-                    buttonElement.innerHTML = inputTemplate(row.title, row.composer)
+                    buttonElement.innerHTML = inputTemplate(row.title, row.artist)
                     buttonElement.onclick = function () {
                         storeTitle(row.title)
                     }
