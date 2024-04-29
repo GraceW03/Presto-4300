@@ -61,8 +61,6 @@ def first_step(query, dataset, n=5):
         row_data = ' '.join([album, review, artist, era])
         corpus.append(row_data)
 
-    print("made corpus")
-
     # from svd_demo-kickstarter-2024-inclass.ipynb
     vectorizer = TfidfVectorizer(stop_words = 'english', max_df = .7, min_df = 75)
     td_matrix = vectorizer.fit_transform(corpus)
@@ -259,7 +257,8 @@ def find_similar_composers(query, dataset, same_composer):
         "composer": dataset.iloc[top_indices]['composer'].values,
         "short_review": dataset.iloc[top_indices]['short_review'].values,
         "era": dataset.iloc[top_indices]['era'].values,
-        "rank": list(range(1, len(top_indices) + 1))
+        "rank": list(range(1, len(top_indices) + 1)),
+        "link": get_title_series(dataset.iloc[top_indices]['title'])
     }
     
     return top_composers
@@ -337,6 +336,7 @@ def combine_rankings(emotions_df, titles_df, title_input, composer_input, same_c
     final_results['rank_percentage'] = (((13294 - final_results['combined_rank']) / 13294) * 100).round(1)
 
     final_json = final_results[['title', 'composer', 'short_review', 'era', 'composer_rank','emotion_rank','review_rank', 'link','rank_percentage']].to_json(orient='records')
+    print("outputting...")
     return final_json
 
 
@@ -370,19 +370,7 @@ def page_two():
 @app.route('/home')
 def go_home():
    return render_template('base.html')
-@app.route('/home')
-def go_home():
-   return render_template('base.html')
 
-@app.route('/store_title', methods=["POST"])
-def store_title():
-   print("storing title...")
-   global global_title 
-   title = request.json.get("title_input")
-   global_title = title
-   print("title stored")
-   print(global_title)
-   return render_template('page_two.html')
 @app.route('/store_title', methods=["POST"])
 def store_title():
    print("storing title...")
@@ -400,20 +388,4 @@ def get_title():
 if 'DB_NAME' not in os.environ:
    app.run(debug=True,host="0.0.0.0",port=5000)
 
-
-def test_combined_rankings():
-    title_input = "Sonatas and Rondos"
-    composer_input = "Andy Li"
-    same_compoers = False
-    top_n = 10
-
-#     # Assuming the combined_rankings function is properly defined and ready to use
-#     result_json = combine_rankings(emotions_df, titles_df, title_input, composer_input, same_compoers, top_n)
-    
-    # Print the combined rankings result in a formatted way
-    formatted_json = json.dumps(json.loads(result_json), indent=4)  # Pretty print the JSON
-    print("Combined Rankings JSON Output:")
-    print(formatted_json)
-# Run the test
-test_combined_rankings()
 

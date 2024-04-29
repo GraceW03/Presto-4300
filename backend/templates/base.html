@@ -128,7 +128,7 @@
 
                     let tempDiv = document.createElement("div")
                     // get title, composer, description (TODO) 
-                    tempDiv.innerHTML = answerBoxTemplate(row.title, row.composer, row.era, row.short_review, row.score, row.link)
+                    tempDiv.innerHTML = answerBoxTemplate(row.title, row.composer, row.era, row.short_review, row.rank_percentage, row.link)
                     document.getElementById("answer-box").appendChild(tempDiv)
                     console.log(document.getElementById("answer-box").value)
                 }));
