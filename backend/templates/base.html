@@ -1,0 +1,149 @@
+<!doctype html>
+<title>{% block title %}{% endblock %} - Flaskr</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit&family=Montserrat&family=Open+Sans:wght@500&display=swap"
+    rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<body>
+    <div class="full-body-container">
+        <div class="top-text">
+            <div class="google-colors">
+                <a href="home">
+                    <h1>Presto!</h1>
+                </a>
+            </div>
+
+
+            <h3>What kind of classical music would you like to listen to?</h3>
+            <br>
+            <div class="input-box" onclick="sendFocus('input-val')">
+                <img src="{{ url_for('static', filename='images/mag.png') }}" />
+                <input placeholder="Mood? Album name? Anything?" id="input-val">
+            </div>
+
+
+        </div>
+
+        <br>
+
+        <!-- submit button (to change) -->
+        <div class="submit-button-container">
+            <button onclick="firstStepFilter()">Next Step</button>
+        </div>
+        <!-- submit button -->
+
+        <div id="input-container">
+
+        </div>
+
+        <div id="loading" style="display: none;">Loading suggested inputs...
+            <br>
+            <img src="images/violin.gif">
+        </div>
+
+    </div>
+
+    <!-- <script>
+        $(document).ready(function () {
+            $('#filter-text-val').select2({
+                data: albums.map(album => ({ id: album, text: album }))
+            });
+        });
+    </script> -->
+
+
+    <script>
+
+        // store the title in the backend
+        function storeTitle(title) {
+            fetch('/store_title', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ title_input: title })
+            })
+                // referenced https://flask.palletsprojects.com/en/2.3.x/patterns/javascript/
+                .then(response => {
+                    if (response.ok) {
+                        return response.text();
+                    } else {
+                        throw new Error('Request failed!');
+                    }
+                })
+                .then(data => {
+                    document.body.innerHTML = data;
+                    document.getElementById("submit-button-container-two").addEventListener("click", filterText);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+
+        function firstStepFilter() {
+            document.getElementById("input-container").innerHTML = "";
+            document.getElementById("loading").style.display = 'block'; // Show the loading div
+
+            console.log(document.getElementById("input-val").value);
+            fetch("/input?" + new URLSearchParams({
+                text: document.getElementById("input-val").value,
+            }).toString())
+                .then((response) => response.json())
+                .then((data) => {
+                    data.forEach(row => {
+                        let buttonElement = document.createElement("button");
+                        buttonElement.classList.add("input-button");
+                        buttonElement.innerHTML = inputTemplate(row.title, row.composer);
+                        buttonElement.onclick = function () {
+                            storeTitle(row.title);
+                        };
+                        document.getElementById("input-container").appendChild(buttonElement);
+                    });
+                    document.getElementById("loading").style.display = 'none'; // Hide the loading div
+                });
+        }
+
+        // function filterText() {
+        //     document.getElementById("input-suggestions").innerHTML = ""
+        //     console.log(document.getElementById("filter-text-val").value)
+        //     fetch("/albums?" + new URLSearchParams({
+        //         title: document.getElementById("filter-text-val").value,
+        //         purpose: document.getElementById("filter-text-purpose").value,
+        //         composer: document.getElementById("filter-text-composer").value
+        //     }).toString())
+        //         .then((response) => response.json())
+        //         .then((data) => data.forEach(row => {
+        //             let tempDiv = document.createElement("div")
+        //             // get title, composer, description (TODO) 
+        //             tempDiv.innerHTML = inputTemplate(row.title, row.artists)
+        //             document.getElementById("input-suggestions").appendChild(tempDiv)
+        //         }));
+
+        // }
+
+        function inputTemplate(title, composer) {
+            return `<div class='input-output'>
+                    <h3 class='episode-title'>Title: ${title}</h3>
+                    <h3 class='composer'>Composer: ${composer}</h3>
+            </div>`
+        }
+
+        // function answerBoxTemplate(title, composer, score) {
+        //     return `<div class=''>
+        //         <h3 class='episode-title'>${title}</h3>
+        //         <h3 class='compoer'>${composer}</h3>
+        //         <p class='episode-desc'>Similarity Score: ${score}</p>
+        //     </div>`
+        // }
+
+        function sendFocus(id) {
+            document.getElementById(id).focus()
+        }
+
+    </script>
+</body>
