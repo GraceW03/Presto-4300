@@ -291,7 +291,6 @@ def combine_review_and_composer_search(title_query, composer_query, dataset):
 
     # Return the top N results
     return combined_results[['title', 'composer', 'review', 'score']]
-    return combined_results[['title', 'composer', 'review', 'score']]
 
 
 ####################################################################################################
