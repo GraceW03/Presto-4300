@@ -41,7 +41,7 @@ with open(json_file_path, 'r') as file:
     titles_df = pd.DataFrame({"title": titles, "composer": artists, "review": reviews, "era": eras})
 
 title_reverse_index = {t: i for i, t in enumerate(titles_df["title"])}
-composer_reverse_index = {t: i for i, t in enumerate(titles_df["artist"])}
+composer_reverse_index = {t: i for i, t in enumerate(titles_df["composer"])}
 global_title = None
 
 app = Flask(__name__)
