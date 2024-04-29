@@ -160,7 +160,7 @@ def find_similar_reviews(query, dataset):
     tfidf_matrix_reviews = vectorizer_reviews.fit_transform(dataset['review'].fillna(""))
 
     # Transform the query to fit the trained TF-IDF model for reviews
-    query_vec_reviews = vectorizer_reviews.transform([get_reviews[query, dataset]])
+    query_vec_reviews = vectorizer_reviews.transform([get_reviews(query, dataset)])
 
     # Calculate cosine similarity between the query and the titles dataset
     cosine_scores_reviews = cosine_similarity(query_vec_reviews, tfidf_matrix_reviews).flatten()
@@ -285,7 +285,7 @@ def combine_rankings(dataset, title_input, composer_input, exclusion, top_n=10):
     # Extracting relevant information for output
     titles = output["title"].tolist()
     artists = output["composer"].tolist()
-    eras = output["era"].tolist()
+    # eras = output["era"].tolist()
     scores = output["score"].tolist()
 
     # Create DataFrame with categorized scores

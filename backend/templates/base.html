@@ -79,7 +79,7 @@
                 })
                 .then(data => {
                     document.body.innerHTML = data;
-                    document.getElementById("submit-button-container-two").addEventListener("click", filterText);
+                    // document.getElementById("submit-button-container-two").addEventListener("click", filterText);
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -91,7 +91,6 @@
             document.getElementById("input-container").innerHTML = "";
             document.getElementById("loading").style.display = 'block'; // Show the loading div
 
-            console.log(document.getElementById("input-val").value);
             fetch("/input?" + new URLSearchParams({
                 text: document.getElementById("input-val").value,
             }).toString())
@@ -110,23 +109,29 @@
                 });
         }
 
-        // function filterText() {
-        //     document.getElementById("input-suggestions").innerHTML = ""
-        //     console.log(document.getElementById("filter-text-val").value)
-        //     fetch("/albums?" + new URLSearchParams({
-        //         title: document.getElementById("filter-text-val").value,
-        //         purpose: document.getElementById("filter-text-purpose").value,
-        //         composer: document.getElementById("filter-text-composer").value
-        //     }).toString())
-        //         .then((response) => response.json())
-        //         .then((data) => data.forEach(row => {
-        //             let tempDiv = document.createElement("div")
-        //             // get title, composer, description (TODO) 
-        //             tempDiv.innerHTML = inputTemplate(row.title, row.artists)
-        //             document.getElementById("input-suggestions").appendChild(tempDiv)
-        //         }));
+        function filterText() {
+            document.getElementById("answer-box").innerHTML = ""
+            var checkedValue = null;
+            var inputElements = document.getElementsByClassName('exclude-composer');
+            for (var i = 0; inputElements[i]; ++i) {
+                if (inputElements[i].checked) {
+                    checkedValue = inputElements[i].value;
+                    break;
+                }
+            }
+            fetch("/albums?" + new URLSearchParams({
+                composer: document.getElementById("filter-text-composer").value,
+                exclude: checkedValue
+            }).toString())
+                .then((response) => response.json())
+                .then((data) => data.forEach(row => {
 
-        // }
+                    let tempDiv = document.createElement("div")
+                    // get title, composer, description (TODO) 
+                    tempDiv.innerHTML = answerBoxTemplate(row.title, row.artists, row.scores)
+                    document.getElementById("answer-box").appendChild(tempDiv)
+                }));
+        }
 
         function inputTemplate(title, composer) {
             return `<div class='input-output'>
