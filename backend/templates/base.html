@@ -36,9 +36,17 @@
         <!-- submit button -->
 
 
+        <div id="loading" style="display: none;">Loading...
+            <br>
+            <!-- <img src="images/violin.gif"> -->
+        </div>
+
+
         <div id="input-container">
 
         </div>
+
+
     </div>
 
     <!-- <script>
@@ -77,7 +85,11 @@
         }
 
         function firstStepFilter() {
-            document.getElementById("input-container").innerHTML = "<br><h3>Here are some possible inputs...<\h3>"
+            document.getElementById("input-container").innerHTML = ""
+
+            // const loadingMessage = document.getElementById('loading');
+            // loadingMessage.style.display = 'block';
+
             console.log(document.getElementById("input-val").value)
             fetch("/input?" + new URLSearchParams({
                 text: document.getElementById("input-val").value,
@@ -91,7 +103,9 @@
                         storeTitle(row.title)
                     }
                     document.getElementById("input-container").appendChild(buttonElement)
-                }));
+                    // loadingMessage.style.display = "none";
+                })
+                );
         }
 
         // function filterText() {
@@ -114,8 +128,8 @@
 
         function inputTemplate(title, composer) {
             return `<div class='input-output'>
-                    <h3 class='episode-title'>${title}</h3>
-                    <h3 class='compoer'>${composer}</h3>
+                    <h3 class='episode-title'>Title: ${title}</h3>
+                    <h3 class='compoer'>Composer: ${composer}</h3>
             </div>`
         }
 

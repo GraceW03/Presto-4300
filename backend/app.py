@@ -327,10 +327,11 @@ def get_first_step():
 
 @app.route("/albums")
 def albums_search():
-    text = request.args.get("title")
+    title = global_title
     composer = request.args.get("composer")
     # purpose = request.args.get("composer")
-    return combine_rankings(titles_df, text, composer)
+    print("title and composer are", title, composer)
+    return combine_rankings(titles_df, title, composer)
 
 # function for multiple pages from 
 # https://stackoverflow.com/questions/67351167/one-flask-with-multiple-page

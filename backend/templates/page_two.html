@@ -64,44 +64,44 @@
           .catch(error => console.error('Error fetching title:', error));
       }
 
-      document.addEventListener('DOMContentLoaded', function () {
-        fetch('/album_names')
-          .then(response => response.json())
-          .then(data => {
-            window.recipeNames = data; // Store recipe names globally
-          })
-          .catch(error => console.error('Error fetching album names:', error));
-      });
+      // document.addEventListener('DOMContentLoaded', function () {
+      //   fetch('/album_names')
+      //     .then(response => response.json())
+      //     .then(data => {
+      //       window.recipeNames = data; // Store recipe names globally
+      //     })
+      //     .catch(error => console.error('Error fetching album names:', error));
+      // });
 
-      function getAlbums() {
-        let userInput = document.getElementById("filter-text-val").value;
-        if (userInput.length > 0) {  // Ensure there is user input before making the call
-          fetch(`/get_titles?query=${encodeURIComponent(userInput)}`)
-            .then(response => response.json())
-            .then(data => showDropdown(userInput, data))  // Pass the returned data to the dropdown
-            .catch(error => console.error('Error fetching names:', error));
-        } else {
-          showDropdown(userInput);  // Call with empty or default data if no input
-        }
-      }
+      // function getAlbums() {
+      //   let userInput = document.getElementById("filter-text-val").value;
+      //   if (userInput.length > 0) {  // Ensure there is user input before making the call
+      //     fetch(`/get_titles?query=${encodeURIComponent(userInput)}`)
+      //       .then(response => response.json())
+      //       .then(data => showDropdown(userInput, data))  // Pass the returned data to the dropdown
+      //       .catch(error => console.error('Error fetching names:', error));
+      //   } else {
+      //     showDropdown(userInput);  // Call with empty or default data if no input
+      //   }
+      // }
 
-      function storeUserInput(userInput) {
-        fetch('/store_user_input', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ userInput: userInput })
-        })
-          .then(response => response.json())
-          .catch((error) => console.error('Error storing user input:', error));
-      }
+      // function storeUserInput(userInput) {
+      //   fetch('/store_user_input', {
+      //     method: 'POST',
+      //     headers: {
+      //       'Content-Type': 'application/json',
+      //     },
+      //     body: JSON.stringify({ userInput: userInput })
+      //   })
+      //     .then(response => response.json())
+      //     .catch((error) => console.error('Error storing user input:', error));
+      // }
 
       function fetchResults(title) {
         const composer = document.getElementById("filter-text-composer").value;
         document.getElementById("answer-box").innerHTML = ""
         //console.log(document.getElementById("filter-text-val").value)
-        fetch(`/albums?title=${encodeURIComponent(title)}&composer=${encodeURIComponent(composer)}`)
+        fetch(`/albums?composer=${encodeURIComponent(composer)}`)
           .then(response => response.json())
           .then(data => {
             data.forEach(row => {
