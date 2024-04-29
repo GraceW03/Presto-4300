@@ -10,35 +10,43 @@
 
 <body>
     <div class="full-body-container">
-        <div class="top-text">
-            <div class="google-colors">
+        <div class="inner-body-container">
+            <div class="top-text">
                 <a href="home">
-                    <h1>Presto</h1>
+                    <h1>Presto!</h1>
                 </a>
+
+
+                <h3>What kind of classical music would you like to listen to?</h3>
+                <br>
+                <div class="input-box" onclick="sendFocus('input-val')">
+                    <img src="{{ url_for('static', filename='images/mag.png') }}" />
+                    <input placeholder="Mood? Album name? Anything?" id="input-val">
+                </div>
+
+
             </div>
 
+            <br>
 
+            <!-- submit button (to change) -->
+            <div class="submit-button-container">
+                <button onclick="firstStepFilter()">Next Step</button>
+            </div>
+            <!-- submit button -->
 
-            <div class="input-box" onclick="sendFocus('input-val')">
-                <img src="{{ url_for('static', filename='images/mag.png') }}" />
-                <input placeholder="Search for a classical album" id="input-val">
+            <div id="input-container">
+
             </div>
 
-
+            <div id="loading" style="display: none;">Loading suggested inputs...
+                <br>
+                <iframe src="https://giphy.com/embed/VgMnMz4Lrq6km1iWSv" width="480" height="480" frameBorder="0"
+                    class="giphy-embed" allowFullScreen></iframe>
+                <p><a href="https://giphy.com/stickers/violin-geige-viool-VgMnMz4Lrq6km1iWSv">via GIPHY</a></p>
+            </div>
         </div>
 
-        <br>
-
-        <!-- submit button (to change) -->
-        <div class="submit-button-container">
-            <button onclick="firstStepFilter()">Next Step</button>
-        </div>
-        <!-- submit button -->
-
-
-        <div id="input-container">
-
-        </div>
     </div>
 
     <!-- <script>
@@ -61,71 +69,88 @@
                 },
                 body: JSON.stringify({ title_input: title })
             })
+                // referenced https://flask.palletsprojects.com/en/2.3.x/patterns/javascript/
                 .then(response => {
                     if (response.ok) {
-                        return response.text(); // Assuming server responds with text/html
+                        return response.text();
                     } else {
                         throw new Error('Request failed!');
                     }
                 })
                 .then(data => {
-                    document.body.innerHTML = data; // Replace the current page content with the new content
+                    document.body.innerHTML = data;
+                    // document.getElementById("submit-button-container-two").addEventListener("click", filterText);
                 })
                 .catch(error => {
                     console.error('Error:', error);
                 });
         }
 
+
         function firstStepFilter() {
-            document.getElementById("input-container").innerHTML = "<br><h3>Here are some possible inputs...<\h3>"
-            console.log(document.getElementById("input-val").value)
+            document.getElementById("input-container").innerHTML = "";
+            document.getElementById("loading").style.display = 'block'; // Show the loading div
+
             fetch("/input?" + new URLSearchParams({
                 text: document.getElementById("input-val").value,
             }).toString())
                 .then((response) => response.json())
+                .then((data) => {
+                    data.forEach(row => {
+                        let buttonElement = document.createElement("button");
+                        buttonElement.classList.add("input-button");
+                        buttonElement.innerHTML = inputTemplate(row.title, row.composer);
+                        buttonElement.onclick = function () {
+                            storeTitle(row.title);
+                        };
+                        document.getElementById("input-container").appendChild(buttonElement);
+                    });
+                    document.getElementById("loading").style.display = 'none'; // Hide the loading div
+                });
+        }
+
+        function filterText() {
+            document.getElementById("answer-box").innerHTML = ""
+            var checkedValue = null;
+            var inputElements = document.getElementsByClassName('exclude-composer');
+            for (var i = 0; inputElements[i]; ++i) {
+                if (inputElements[i].checked) {
+                    checkedValue = inputElements[i].value;
+                    break;
+                }
+            }
+            fetch("/albums?" + new URLSearchParams({
+                composer: document.getElementById("filter-text-composer").value,
+                exclude: checkedValue
+            }).toString())
+                .then((response) => response.json())
                 .then((data) => data.forEach(row => {
-                    let buttonElement = document.createElement("button")
-                    buttonElement.classList.add("input-button")
-                    buttonElement.innerHTML = inputTemplate(row.title, row.composer)
-                    buttonElement.onclick = function () {
-                        storeTitle(row.title)
-                    }
-                    document.getElementById("input-container").appendChild(buttonElement)
+
+                    let tempDiv = document.createElement("div")
+                    // get title, composer, description (TODO) 
+                    tempDiv.innerHTML = answerBoxTemplate(row.title, row.composer, row.era, row.short_review, row.score, row.link)
+                    document.getElementById("answer-box").appendChild(tempDiv)
+                    console.log(document.getElementById("answer-box").value)
                 }));
         }
 
-        // function filterText() {
-        //     document.getElementById("input-suggestions").innerHTML = ""
-        //     console.log(document.getElementById("filter-text-val").value)
-        //     fetch("/albums?" + new URLSearchParams({
-        //         title: document.getElementById("filter-text-val").value,
-        //         purpose: document.getElementById("filter-text-purpose").value,
-        //         composer: document.getElementById("filter-text-composer").value
-        //     }).toString())
-        //         .then((response) => response.json())
-        //         .then((data) => data.forEach(row => {
-        //             let tempDiv = document.createElement("div")
-        //             // get title, composer, description (TODO) 
-        //             tempDiv.innerHTML = inputTemplate(row.title, row.artists)
-        //             document.getElementById("input-suggestions").appendChild(tempDiv)
-        //         }));
-
-        // }
-
         function inputTemplate(title, composer) {
             return `<div class='input-output'>
-                    <h3 class='episode-title'>${title}</h3>
-                    <h3 class='compoer'>${composer}</h3>
+                    <h3 class='episode-title'>Title: ${title}</h3>
+                    <h3 class='composer'>Composer: ${composer}</h3>
             </div>`
         }
 
-        // function answerBoxTemplate(title, composer, score) {
-        //     return `<div class=''>
-        //         <h3 class='episode-title'>${title}</h3>
-        //         <h3 class='compoer'>${composer}</h3>
-        //         <p class='episode-desc'>Similarity Score: ${score}</p>
-        //     </div>`
-        // }
+        function answerBoxTemplate(title, composer, era, short_review, score, link) {
+            return `<div class=''>
+              <h3 class='episode-title'>Title: ${title}</h3>
+              <h3 class='composer'>Composer: ${composer}</h3>
+              <h3 class='era'>Era: ${era}</h3>
+              <h3 class='desc'>Summary: ${short_review}</h3>
+              <p class='score'>Similarity Score: ${score}</p>
+              <a href='https://www.youtube.com/results?search_query=${link}'><img src='images/youtube.png'></img></a>
+          </div>`
+        }
 
         function sendFocus(id) {
             document.getElementById(id).focus()
