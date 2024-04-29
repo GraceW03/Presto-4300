@@ -41,6 +41,7 @@ with open(json_file_path, 'r') as file:
     neutral = data['neutral'].values()
     emotions_df = pd.DataFrame({ "joy":joy, "sadness":sadness, "fear":fear, "anger":anger, "neutral":neutral})
     titles_df = pd.DataFrame({"title": titles, "composer": artists, "review": reviews, "short_review": short_review, "era": eras})
+
 title_reverse_index = {t: i for i, t in enumerate(titles_df["title"])}
 composer_reverse_index = {t: i for i, t in enumerate(titles_df["composer"])}
 global_title = None
@@ -60,15 +61,12 @@ def first_step(query, dataset, n=5):
         row_data = ' '.join([album, review, artist, era])
         corpus.append(row_data)
 
-    # corpus = dataset["titles"].str.cat([dataset['reviews'], dataset['artists'], 
-    #                                     dataset['eras']], sep =" ").to_list()
-
     print("made corpus")
 
     # from svd_demo-kickstarter-2024-inclass.ipynb
-    vectorizer = TfidfVectorizer(stop_words = 'english', max_df = .7, min_df = 50)
+    vectorizer = TfidfVectorizer(stop_words = 'english', max_df = .7, min_df = 75)
     td_matrix = vectorizer.fit_transform(corpus)
-    docs_compressed, s, words_compressed = svds(td_matrix, k=100)
+    docs_compressed, s, words_compressed = svds(td_matrix, k=50)
     words_compressed = words_compressed.transpose()
 
     # word_to_index = vectorizer.vocabulary_
@@ -81,7 +79,7 @@ def first_step(query, dataset, n=5):
     query_vec = normalize(np.dot(query_tfidf, words_compressed)).squeeze()
 
     sims = docs_compressed_normed.dot(query_vec)
-    asort = np.argsort(-sims)[:n+1]
+    asort = np.argsort(-sims)[:n]
 
 
     top_titles = pd.DataFrame({
@@ -94,7 +92,12 @@ def first_step(query, dataset, n=5):
         
 
 def title_to_link(s):
+    if s is None:
+        s = ""
     return "+".join(s.split())
+
+def get_title_series(titles):
+    return titles.apply(lambda s : title_to_link(s))
 
 
 ####################################################################################################
@@ -145,6 +148,7 @@ def get_reviews(query, dataset):
     index = title_reverse_index.get(query)
     if index is not None:
         # Return the review at the found index
+        print(index)
         return dataset.iloc[index]['review']
     return ""  # Return empty string if title not found
 
@@ -165,7 +169,7 @@ def find_similar_reviews(query, dataset):
     tfidf_matrix_reviews = vectorizer_reviews.fit_transform(dataset['review'].fillna(""))
 
     # Get the review for the query using the corrected function call
-    query_review = get_reviews(query, dataset)
+    query_review = get_reviews(query, titles_df)
     query_vec_reviews = vectorizer_reviews.transform([query_review])
 
     # Calculate cosine similarity between the query and the titles dataset
@@ -188,7 +192,8 @@ def find_similar_reviews(query, dataset):
         "composer": dataset.iloc[top_indices]['composer'].values,
         "short_review": dataset.iloc[top_indices]['short_review'].values,
         "era": dataset.iloc[top_indices]['era'].values,
-        "rank": ranks  # Include ranks instead of scores
+        "rank": ranks,  # Include ranks instead of scores
+        "link": get_title_series(dataset.iloc[top_indices]['title'])
     })
 
     return top_titles
@@ -224,7 +229,8 @@ def cos_sim_album(title_input, dataset):
         "composer": dataset.iloc[top_indices]['composer'].values,
         "short_review": dataset.iloc[top_indices]['short_review'].values,
         "era": dataset.iloc[top_indices]['era'].values,
-        "score": cosine_scores[top_indices]  # Include cosine similarity scores
+        "score": cosine_scores[top_indices],  # Include cosine similarity scores
+        "link": get_title_series(dataset.iloc[top_indices]['title'])
     })
     
     return top_titles
@@ -278,7 +284,8 @@ def find_similar_album_by_emotion(emotions_df, titles_df, query_index):
         "composer": titles_df.iloc[top_indices]['composer'].values,
         "short_review": titles_df.iloc[top_indices]['short_review'].values,
         "era": titles_df.iloc[top_indices]['era'].values,
-        "rank": range(1, len(top_indices) + 1)  # Generate ranks for the filtered indices
+        "rank": range(1, len(top_indices) + 1),  # Generate ranks for the filtered indices
+        "link": get_title_series(titles_df.iloc[top_indices]['title'])
     })
 
     return top_results
@@ -319,7 +326,7 @@ def combine_rankings(emotions_df, titles_df, title_input, composer_input, same_c
     final_results = final_results.sort_values(by='combined_rank').head(top_n)
 
     # Convert to JSON
-    final_json = final_results[['title', 'composer', 'short', 'era', 'review_rank', 'emotion_rank', 'combined_rank']].to_json(orient='records')
+    final_json = final_results[['title', 'composer', 'short', 'era', 'review_rank', 'emotion_rank', 'combined_rank', 'link']].to_json(orient='records')
 
     return final_json
 
@@ -330,64 +337,65 @@ def combine_rankings(emotions_df, titles_df, title_input, composer_input, same_c
 ####################################################################################################
 
 # routes
-#@app.route("/")
-#def home():
-#    return render_template('base.html',title="sample html")
+@app.route("/")
+def home():
+   return render_template('base.html',title="sample html")
 
 @app.route("/input")
 def get_first_step():
    query = request.args.get("text")
    return first_step(query, titles_df)
 
-
-# @app.route("/albums")
-# def albums_search():
-#     text = global_title
-#     composer = request.args.get("composer")
-#     # purpose = request.args.get("composer")
-#     return combine_rankings(titles_df, text, composer)
+@app.route("/albums")
+def albums_search():
+    text = global_title
+    composer = request.args.get("composer")
+    exclusion = False if request.args.get("exclude") != "null" else True
+    print(exclusion)
+    # purpose = request.args.get("composer")
+    return combine_rankings(emotions_df, titles_df, text, composer, exclusion)
 
 # function for multiple pages from 
 # https://stackoverflow.com/questions/67351167/one-flask-with-multiple-page
-#@app.route('/page_two')
-#def page_two():
-#    return render_template('page_two.html')
+@app.route('/page_two')
+def page_two():
+   return render_template('page_two.html')
 
-#@app.route('/home')
-#def go_home():
-#    return render_template('base.html')
+@app.route('/home')
+def go_home():
+   return render_template('base.html')
 
-#@app.route('/store_title', methods=["POST"])
-#def store_title():
-#    print("storing title...")
-#    global global_title 
-#    title = request.json.get("title_input")
-#    global_title = title
-#    print("title stored")
-#    print(global_title)
-#    return render_template('page_two.html')
+@app.route('/store_title', methods=["POST"])
+def store_title():
+   print("storing title...")
+   global global_title 
+   title = request.json.get("title_input")
+   global_title = title
+   print("title stored")
+   print(global_title)
+   return render_template('page_two.html')
 
-#@app.route('/get_title')
-#def get_title():
-#    return json.dumps(global_title)
+@app.route('/get_title')
+def get_title():
+   return json.dumps(global_title)
 
-#if 'DB_NAME' not in os.environ:
-#    app.run(debug=True,host="0.0.0.0",port=5000)
+if 'DB_NAME' not in os.environ:
+   app.run(debug=True,host="0.0.0.0",port=5000)
 
 
-def test_combined_rankings():
-    title_input = "Sonatas and Rondos"
-    composer_input = "Andy Li"
-    same_compoers = False
-    top_n = 10
+# def test_combined_rankings():
+#     title_input = "Sonatas and Rondos"
+#     composer_input = "Andy Li"
+#     same_compoers = False
+#     top_n = 10
 
-    # Assuming the combined_rankings function is properly defined and ready to use
-    result_json = combine_rankings(emotions_df, titles_df, title_input, composer_input, same_compoers, top_n)
+#     # Assuming the combined_rankings function is properly defined and ready to use
+#     result_json = combine_rankings(emotions_df, titles_df, title_input, composer_input, same_compoers, top_n)
     
-    # Print the combined rankings result in a formatted way
-    formatted_json = json.dumps(json.loads(result_json), indent=4)  # Pretty print the JSON
-    print("Combined Rankings JSON Output:")
-    print(formatted_json)
-# Run the test
-test_combined_rankings()
+#     # Print the combined rankings result in a formatted way
+#     formatted_json = json.dumps(json.loads(result_json), indent=4)  # Pretty print the JSON
+#     print("Combined Rankings JSON Output:")
+#     print(formatted_json)
+# # Run the test
+# test_combined_rankings()
 
