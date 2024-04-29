@@ -30,13 +30,24 @@ with open(json_file_path, 'r') as file:
     reviews = data['review'].values()
     titles = data['title'].values()
     eras = data['era'].values()
+<<<<<<< HEAD
+=======
+    short_review = data['short_review'].values()
+    
+>>>>>>> 025cacd460309b2743c7f871ca216b9aaf03af9f
     joy = data['joy'].values()
     sadness = data['sadness'].values()
     fear = data['fear'].values()
     anger = data['anger'].values()
     neutral = data['neutral'].values()
     emotions_df = pd.DataFrame({ "joy":joy, "sadness":sadness, "fear":fear, "anger":anger, "neutral":neutral})
+<<<<<<< HEAD
     titles_df = pd.DataFrame({"title": titles, "composer": artists, "review": reviews, "era": eras})
+=======
+    
+titles_df = pd.DataFrame({"title": titles, "composer": artists, "review": reviews, "era": eras, "short_review" : short_review})
+
+>>>>>>> 025cacd460309b2743c7f871ca216b9aaf03af9f
 title_reverse_index = {t: i for i, t in enumerate(titles_df["title"])}
 composer_reverse_index = {t: i for i, t in enumerate(titles_df["composer"])}
 global_title = None
@@ -66,7 +77,6 @@ def first_step(query, dataset, n=5):
     td_matrix = vectorizer.fit_transform(corpus)
     docs_compressed, s, words_compressed = svds(td_matrix, k=100)
     words_compressed = words_compressed.transpose()
-
     # word_to_index = vectorizer.vocabulary_
     # index_to_word = {i:t for t,i in word_to_index.items()}
     # words_compressed_normed = normalize(words_compressed, axis = 1)
@@ -87,20 +97,23 @@ def first_step(query, dataset, n=5):
     # print(top_titles)
 
     return top_titles.to_json(orient='records')
+        
+    
 
-#########################################################################################
-# find similarity between albums based on emotion:
 
-# Define the do_svd function as provided
-def do_svd(mat, k=0, option=False):
-    U, Sigma, VT = svd(mat)
-    U = pd.DataFrame(U[:, :k])
-    VT = pd.DataFrame(VT[:k, :])
-    if option:
-        return Sigma
-    else:
-        return U, VT
 
+
+
+
+# demo code for similarity function
+# def closest_projects_to_query(query_vec_in, k = 5):
+#     sims = docs_compressed_normed.dot(query_vec_in)
+#     asort = np.argsort(-sims)[:k+1]
+#     return [(i, documents.iloc(i)["Album"],sims[i]) for i in asort[1:]]
+
+
+
+<<<<<<< HEAD
 def find_similar_album_by_emotion(emotion_df, titles_df, query_index, top_k=10):
     # Apply SVD to the emotion scores
     U, _ = do_svd(emotion_df, k=5)
@@ -128,6 +141,8 @@ def find_similar_album_by_emotion(emotion_df, titles_df, query_index, top_k=10):
         "era": titles_df.iloc[similar_indices]['era'].values,  # Extracting era info
         "score": normalized_scores[similar_indices]  # Include normalized similarity scores
     })
+=======
+>>>>>>> 025cacd460309b2743c7f871ca216b9aaf03af9f
 
     return top_results
 
@@ -182,10 +197,17 @@ def get_reviews(query, dataset):
     album_row = dataset.iloc[index]
     return album_row[index_of_reviews_column]
 
+#getting short reviews for explainbility in output
+def get_short_reviews(query, dataset):
+    index = title_reverse_index[query]
+    index_of_short_reviews_column = dataset.columns.get_loc('short_review')
+    album_row = dataset.iloc[index]
+    return album_row[index_of_short_reviews_column]
+
+
 def find_similar_reviews(query, dataset):
     # Vectorize reviews
     vectorizer_reviews = TfidfVectorizer()
-    tfidf_matrix_reviews = vectorizer_reviews.fit_transform(dataset['review'].fillna(""))
     tfidf_matrix_reviews = vectorizer_reviews.fit_transform(dataset['review'].fillna(""))
 
     # Transform the query to fit the trained TF-IDF model for reviews
@@ -248,10 +270,8 @@ def find_similar_composers(query, dataset):
     # Determine the era of the input artist based on the highest cosine similarity
     top_index = cosine_scores.argmax()
     input_artist_era = dataset.iloc[top_index]['era']
-    input_artist_era = dataset.iloc[top_index]['era']
 
     # Calculate era scores (1 if matching era, 0 otherwise)
-    era_scores = (dataset['era'] == input_artist_era).astype(int)
     era_scores = (dataset['era'] == input_artist_era).astype(int)
 
     # Normalize scores to ensure fair weighting
@@ -283,13 +303,10 @@ def combine_review_and_composer_search(title_query, composer_query, dataset):
     if not similar_reviews.empty and not similar_composers.empty:
         combined_results = pd.merge(similar_reviews, similar_composers, on=['title', 'composer', 'review'], suffixes=('_review', '_composer'))
         combined_results['score'] = (combined_results['score_review'] + combined_results['score_composer']) / 2
-        combined_results = pd.merge(similar_reviews, similar_composers, on=['title', 'composer', 'review'], suffixes=('_review', '_composer'))
-        combined_results['score'] = (combined_results['score_review'] + combined_results['score_composer']) / 2
     else:
         return pd.DataFrame()  # Return empty if any of the searches yield no results
 
     # Sort by the combined score in descending order
-    combined_results = combined_results.sort_values(by='score', ascending=False)
     combined_results = combined_results.sort_values(by='score', ascending=False)
 
     # Return the top N results
@@ -303,7 +320,6 @@ def combine_rankings(dataset, title_input, composer_input, top_n=10):
     get final result
     '''
     if composer_input and title_input:
-        top_titles_artists = combine_review_and_composer_search(title_input, composer_input, dataset)
         top_titles_artists = combine_review_and_composer_search(title_input, composer_input, dataset)
         output = top_titles_artists.iloc[:top_n]
 
@@ -349,7 +365,7 @@ def get_first_step():
 
 @app.route("/albums")
 def albums_search():
-    text = global_title
+    text = request.args.get("title")
     composer = request.args.get("composer")
     # purpose = request.args.get("composer")
     return combine_rankings(titles_df, text, composer)
