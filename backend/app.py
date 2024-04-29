@@ -227,19 +227,28 @@ def find_similar_composers(query, dataset, same_composer):
     # Normalize the input and create a copy of the dataset for manipulation
     artists_normalized = dataset['composer'].str.lower()
     query_lower = query.lower()
-    
+
     vectorizer = TfidfVectorizer()
     tfidf_matrix = vectorizer.fit_transform(artists_normalized.fillna(""))
     query_vec = vectorizer.transform([query_lower])
-    
+
     cosine_scores = cosine_similarity(query_vec, tfidf_matrix).flatten()
     top_index = cosine_scores.argmax()
     input_artist_era = dataset.iloc[top_index]['era']
     updated_artist = dataset.iloc[top_index]['composer']
+
     if same_composer:
-        top_composers = dataset[dataset['composer'].str.lower() == updated_artist]
+        top_indices = dataset[dataset['composer'].str.lower() == updated_artist.lower()].index
     else:
-        top_composers = dataset[(dataset['era'] == input_artist_era) & (dataset['composer'].str.lower() != updated_artist)]
+        top_indices = dataset[(dataset['era'] == input_artist_era) & (dataset['composer'].str.lower() != updated_artist.lower())].index
+
+    top_composers = {
+        "title": dataset.iloc[top_indices]['title'].values,
+        "composer": dataset.iloc[top_indices]['composer'].values,
+        "short_review": dataset.iloc[top_indices]['short_review'].values,
+        "era": dataset.iloc[top_indices]['era'].values,
+        "rank": list(range(1, len(top_indices) + 1))
+    }
     
     return top_composers
 
@@ -280,109 +289,102 @@ def find_similar_album_by_emotion(emotions_df, titles_df, query_index):
 
 ####################################################################################################
 def combine_rankings(emotions_df, titles_df, title_input, composer_input, same_composer, top_n=10):
-    # Fetch similar composers first as a filtering step
-    composer_filtered_results = find_similar_composers(composer_input, titles_df, same_composer)
+    composer_dict = find_similar_composers(composer_input, titles_df, same_composer)
+    composer_results = pd.DataFrame(composer_dict)
+    composer_results = composer_results.rename(columns={'composer': 'composer_composer', 'short_review': 'short_review_composer', 'era': 'era_composer'})
+    composer_results['composer_rank'] = composer_results['rank'] # Adjust rank based on your logic
 
-
-    # Run similar reviews based on filtered dataset
-    review_results = find_similar_reviews(title_input, composer_filtered_results)
+    review_results = find_similar_reviews(title_input, titles_df)
     review_results = review_results.rename(columns={'composer': 'composer_review', 'short_review': 'short_review_review', 'era': 'era_review'})
     review_results['review_rank'] = review_results['rank']  # assuming 'rank' comes from the find_similar_reviews output
 
-    # Run emotion analysis based on filtered dataset
     title_index = title_reverse_index.get(title_input, -1)
     if title_index == -1:
         print("Title not found for emotion analysis.")
         return pd.DataFrame()
 
-    emotion_results = find_similar_album_by_emotion(emotions_df, composer_filtered_results, title_index)
+    emotion_results = find_similar_album_by_emotion(emotions_df, titles_df, title_index)
     emotion_results = emotion_results.rename(columns={'composer': 'composer_emotion', 'short_review': 'short_review_emotion', 'era': 'era_emotion'})
     emotion_results['emotion_rank'] = emotion_results['rank']  # assuming 'rank' comes from the find_similar_album_by_emotion output
 
-    # Merge the two results on 'title'
-    merged_results = pd.merge(review_results, emotion_results, on='title', suffixes=('_review', '_emotion'))
+    combined_results = pd.merge(composer_results, review_results, on='title', suffixes=('_composer', '_review'))
+    combined_results = pd.merge(combined_results, emotion_results, on='title', suffixes=('', '_emotion'))
 
-    # Calculate combined rank (you can adjust the weights here)
-    merged_results['combined_rank'] = merged_results['review_rank'] + merged_results['emotion_rank']
-    final_results = merged_results.dropna()
+    combined_results['combined_rank'] = combined_results['composer_rank'] + combined_results['review_rank'] + combined_results['emotion_rank']
+    final_results = combined_results.dropna()
     final_results = final_results.drop_duplicates(subset=['title'])
 
-    final_results.columns = final_results.columns.str.replace('_review', '')
+    final_results.columns = final_results.columns.str.replace('_review', '').str.replace('_composer', '').str.replace('_emotion', '')
+    final_results.columns = [col if col not in final_results.columns[:i] else col + '_final' for i, col in enumerate(final_results.columns)]
 
-    # Sort by combined rank again
+    if 'short' in final_results.columns:
+        final_results = final_results.rename(columns={'short': 'short_review'})
+
     final_results = final_results.sort_values(by='combined_rank').head(top_n)
+    final_results['rank_percentage'] = (((13294 - final_results['combined_rank']) / 13294) * 100).round(1)
 
-    # Convert to JSON
-    final_json = final_results[['title', 'composer', 'short', 'era', 'review_rank', 'emotion_rank', 'combined_rank']].to_json(orient='records')
-
+    final_json = final_results[['title', 'composer', 'short_review', 'era', 'composer_rank','emotion_rank','review_rank','rank_percentage']].to_json(orient='records')
     return final_json
 
-# Usage example, ensure all functions and variables are defined and loaded appropriately
-# final_output = combine_rankings(dataset, emotions_df, titles_df, 'Some Title', 'Some Composer')
-# print(final_output)
 
 ####################################################################################################
+@app.route("/")
+def home():
+   return render_template('base.html',title="sample html")
 
-# routes
-#@app.route("/")
-#def home():
-#    return render_template('base.html',title="sample html")
-
-#@app.route("/input")
-#def get_first_step():
-#   print("here1")
-#   query = request.args.get("text")
-#   return first_step(query, titles_df)
+@app.route("/input")
+def get_first_step():
+  print("here1")
+  query = request.args.get("text")
+  return first_step(query, titles_df)
 
 
-# @app.route("/albums")
-# def albums_search():
-#     text = global_title
-#     composer = request.args.get("composer")
-#     # purpose = request.args.get("composer")
-#     return combine_rankings(titles_df, text, composer)
+@app.route("/albums")
+def albums_search():
+    text = global_title
+    composer = request.args.get("composer")
+    return combine_rankings(titles_df, text, composer)
 
-# function for multiple pages from 
-# https://stackoverflow.com/questions/67351167/one-flask-with-multiple-page
-#@app.route('/page_two')
-#def page_two():
-#    return render_template('page_two.html')
+@app.route('/page_two')
+def page_two():
+   return render_template('page_two.html')
 
-#@app.route('/home')
-#def go_home():
-#    return render_template('base.html')
+@app.route('/home')
+def go_home():
+   return render_template('base.html')
 
-#@app.route('/store_title', methods=["POST"])
-#def store_title():
-#    print("storing title...")
-#    global global_title 
-#    title = request.json.get("title_input")
-#    global_title = title
-#    print("title stored")
-#    print(global_title)
-#    return render_template('page_two.html')
+@app.route('/store_title', methods=["POST"])
+def store_title():
+   print("storing title...")
+   global global_title 
+   title = request.json.get("title_input")
+   global_title = title
+   print("title stored")
+   print(global_title)
+   return render_template('page_two.html')
 
-#@app.route('/get_title')
-#def get_title():
-#    return json.dumps(global_title)
+@app.route('/get_title')
+def get_title():
+    return json.dumps(global_title)
 
-#if 'DB_NAME' not in os.environ:
-#    app.run(debug=True,host="0.0.0.0",port=5000)
+if 'DB_NAME' not in os.environ:
+    app.run(debug=True,host="0.0.0.0",port=5000)
 
+# def test_combined_rankings():
+#     title_input = "Sonatas and Rondos"
+#     composer_input = "Andy Li"
+#     same_compoers = False
+#     top_n = 10
 
-def test_combined_rankings():
-    title_input = "Sonatas and Rondos"
-    composer_input = "Andy Li"
-    same_compoers = False
-    top_n = 10
-
-    # Assuming the combined_rankings function is properly defined and ready to use
-    result_json = combine_rankings(emotions_df, titles_df, title_input, composer_input, same_compoers, top_n)
+#     # Assuming the combined_rankings function is properly defined and ready to use
+#     result_json = combine_rankings(emotions_df, titles_df, title_input, composer_input, same_compoers, top_n)
     
-    # Print the combined rankings result in a formatted way
-    formatted_json = json.dumps(json.loads(result_json), indent=4)  # Pretty print the JSON
-    print("Combined Rankings JSON Output:")
-    print(formatted_json)
-# Run the test
-test_combined_rankings()
+#     # Print the combined rankings result in a formatted way
+#     formatted_json = json.dumps(json.loads(result_json), indent=4)  # Pretty print the JSON
+#     print("Combined Rankings JSON Output:")
+#     print(formatted_json)
+# # Run the test
+# test_combined_rankings()
+
+
 
