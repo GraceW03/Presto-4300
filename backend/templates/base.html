@@ -149,7 +149,7 @@
               <h3 class='era'>Era: ${era}</h3>
               <h3 class='desc'>Summary: ${short_review}</h3>
               <p class='score'>Similarity Score: ${score}</p>
-              <p>Based on the text of this album's review, it is more similar that ${review_rank}% of the other albums. Based on the emotions of the review, it is more similar than ${emotion_rank}% of the albums. The composer of this album is ${composer_input}% similar to the inputted composer, based on cosine similarity of the name or era similarity. From the weighted combination of these scores, this album beats ${score}% of the other albums in the dataset. </p>
+              <p>Based on the text of this album's review, it is more similar that ${review_rank}% of the other albums. Based on the emotions of the review, it is more similar than ${emotion_rank}% of the albums. The composer of this album is ${composer_rank}% similar to the inputted composer, based on cosine similarity of the name or era similarity. From the weighted combination of these scores, this album beats ${score}% of the other albums in the dataset. </p>
               <a href='https://www.youtube.com/results?search_query=${link}'><img src="{{ url_for('static', filename='images/youtube.png') }}"></img></a><br>
           </div>`
         }
