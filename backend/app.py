@@ -263,7 +263,7 @@ def combine_review_and_composer_search(title_query, composer_query, dataset):
 
 
 ####################################################################################################
-def combine_rankings(dataset, title_input, composer_input, top_n=10):
+def combine_rankings(dataset, title_input, composer_input, exclusion, top_n=10):
     ''' 
     Get a list of rankings from each algorithm, then will weight avg to 
     get final result
@@ -316,9 +316,10 @@ def get_first_step():
 def albums_search():
     title = global_title
     composer = request.args.get("composer")
+    exclusion = request.args.get("exclude")
     # purpose = request.args.get("composer")
-    print("title and composer are", title, composer)
-    return combine_rankings(titles_df, title, composer)
+    print("title and composer are", title, composer, exclusion)
+    return combine_rankings(titles_df, title, composer, exclusion)
 
 # function for multiple pages from 
 # https://stackoverflow.com/questions/67351167/one-flask-with-multiple-page

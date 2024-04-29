@@ -47,7 +47,6 @@
 
         </div>
 
-
     </div>
 
     <!-- <script>
@@ -80,6 +79,7 @@
                 })
                 .then(data => {
                     document.body.innerHTML = data;
+                    document.getElementById("submit-button-container-two").addEventListener("click", filterText);
                 })
                 .catch(error => {
                     console.error('Error:', error);

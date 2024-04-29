@@ -9,6 +9,90 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <body>
+  <script>
+
+    function getTitle() {
+      fetch('/get_title')
+        .then(response => response.json())
+        .then(title => {
+          if (title) {
+            fetchResults(title);
+          } else {
+            console.error('No title found.');
+          }
+        })
+        .catch(error => console.error('Error fetching title:', error));
+    }
+
+
+    // function fetchResults() {
+    //   const composer = document.getElementById("filter-text-composer").value;
+    //   document.getElementById("answer-box").innerHTML = ""
+
+    //   var checkedValue = false;
+    //   var inputElements = document.getElementsByClassName('exclude-composer');
+    //   for (var i = 0; inputElements[i]; ++i) {
+    //     if (inputElements[i].checked) {
+    //       checkedValue = true;
+    //       break;
+    //     }
+    //   }
+    //   //console.log(document.getElementById("filter-text-val").value)
+    //   fetch(`/albums?composer=${encodeURIComponent(composer)}&exclude=${(checkedValue)}`)
+    //     .then(response => response.json())
+    //     .then(data => {
+    //       data.forEach(row => {
+
+    //         let tempDiv = document.createElement("div");
+    //         tempDiv.innerHTML = answerBoxTemplate(row.title, row.composer, row.score);
+    //         document.getElementById("answer-box").appendChild(tempDiv);
+    //       });
+    //     })
+    //     .catch(error => console.error('Error fetching results:', error));
+    // }
+
+    function filterText() {
+      document.getElementById("answer-box").innerHTML = ""
+      console.log(document.getElementById("filter-text-val").value)
+      var checkedValue = null;
+      var inputElements = document.getElementsByClassName('exclude-composer');
+      for (var i = 0; inputElements[i]; ++i) {
+        if (inputElements[i].checked) {
+          checkedValue = inputElements[i].value;
+          break;
+        }
+      }
+      fetch("/albums?" + new URLSearchParams({
+        composer: document.getElementById("filter-text-composer").value,
+        exclude: checkedValue
+      }).toString())
+        .then((response) => response.json())
+        .then((data) => data.forEach(row => {
+
+          let tempDiv = document.createElement("div")
+          // get title, composer, description (TODO) 
+          tempDiv.innerHTML = answerBoxTemplate(row.title, row.artists, row.scores)
+          document.getElementById("answer-box").appendChild(tempDiv)
+        }));
+    }
+
+    function answerBoxTemplate(title, composer, score) {
+      return `<div class=''>
+              <h3 class='episode-title'>${title}</h3>
+              <h3 class='composer'>${composer}</h3>
+              <h3 class='era'>${era}</h3>
+              <h3 class='desc'>${short_review}</h3>
+              <p class='score'>Similarity Score: ${score}</p>
+          </div>`
+    }
+
+    function sendFocus(id) {
+      document.getElementById(id).focus()
+    }
+
+  </script>
+
+
   <div class="full-body-container">
     <div class="top-text">
       <div class="google-colors">
@@ -36,13 +120,14 @@
       <br>
 
       <div class="exclude-composer-bool">
-        <input type="checkbox" id="comp" name="composer-exclusion" value="Exclude this composer from my results">
+        <input type="checkbox" class="exclude-composer" name="composer-exclusion" value="exclude">Exclude this composer
+        from my results
       </div>
 
       <br>
 
       <!-- submit button (to remove) -->
-      <div class="submit-button-container">
+      <div class="submit-button-container-two">
         <button onclick="filterText()">Give Me Recommendations!</button>
       </div>
       <!-- submit button -->
@@ -52,74 +137,6 @@
 
       </div>
     </div>
-
-
-
-    <script>
-
-      function getTitle() {
-        fetch('/get_title')
-          .then(response => response.json())
-          .then(title => {
-            if (title) {
-              fetchResults(title);
-            } else {
-              console.error('No title found.');
-            }
-          })
-          .catch(error => console.error('Error fetching title:', error));
-      }
-
-
-      function fetchResults(title) {
-        const composer = document.getElementById("filter-text-composer").value;
-        document.getElementById("answer-box").innerHTML = ""
-        //console.log(document.getElementById("filter-text-val").value)
-        fetch(`/albums?composer=${encodeURIComponent(composer)}`)
-          .then(response => response.json())
-          .then(data => {
-            data.forEach(row => {
-              let tempDiv = document.createElement("div");
-              tempDiv.innerHTML = answerBoxTemplate(row.title, row.composer, row.score);
-              document.getElementById("answer-box").appendChild(tempDiv);
-            });
-          })
-          .catch(error => console.error('Error fetching results:', error));
-      }
-
-      // function filterText() {
-      //   document.getElementById("answer-box").innerHTML = ""
-      //   console.log(document.getElementById("filter-text-val").value)
-      //   fetch("/albums?" + new URLSearchParams({
-      //     title: document.getElementById("filter-text-val").value,
-      //     purpose: document.getElementById("filter-text-purpose").value,
-      //     composer: document.getElementById("filter-text-composer").value
-      //   }).toString())
-      //     .then((response) => response.json())
-      //     .then((data) => data.forEach(row => {
-
-      //       let tempDiv = document.createElement("div")
-      //       // get title, composer, description (TODO) 
-      //       tempDiv.innerHTML = answerBoxTemplate(row.title, row.artists, row.scores)
-      //       document.getElementById("answer-box").appendChild(tempDiv)
-      //     }));
-
-      // }
-
-      function answerBoxTemplate(title, composer, score) {
-        return `<div class=''>
-              <h3 class='episode-title'>${title}</h3>
-              <h3 class='compoer'>${composer}</h3>
-              <h3 class='compoer'>${era}</h3>
-              <h3 class='compoer'>${short_review}</h3>
-              <p class='episode-desc'>Similarity Score: ${score}</p>
-          </div>`
-      }
-
-      function sendFocus(id) {
-        document.getElementById(id).focus()
-      }
-
-    </script>
   </div>
+
 </body>
