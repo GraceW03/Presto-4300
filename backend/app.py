@@ -346,7 +346,7 @@ def get_first_step():
 
 @app.route("/albums")
 def albums_search():
-    text = request.args.get("title")
+    text = global_title
     composer = request.args.get("composer")
     # purpose = request.args.get("composer")
     return combine_rankings(titles_df, text, composer)

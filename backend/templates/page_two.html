@@ -12,10 +12,6 @@
   <div class="full-body-container">
     <div class="top-text">
       <div class="google-colors">
-        <!-- <h1 id="google-4">4</h1>
-              <h1 id="google-3">3</h1>
-              <h1 id="google-0-1">0</h1>
-              <h1 id="google-0-2">0</h1> -->
         <a href="home">
           <h1>Presto</h1>
         </a>
@@ -75,27 +71,6 @@
           showDropdown(userInput);  // Call with empty or default data if no input
         }
       }
-
-
-
-      // function showDropdown(userInput, names = []) {
-      //     const dropdown = document.getElementById("dropdown");
-      //     dropdown.innerHTML = "";  // Clear previous options
-      //     names.forEach(option => {
-      //         const optionDiv = document.createElement("div");
-      //         optionDiv.textContent = option;
-      //         console.log(optionDiv);
-      //         optionDiv.onclick = function () {
-      //             document.getElementById("filter-text-val").value = option;
-      //             dropdown.style.display = "none";
-      //             storeUserInput(option);
-      //         };
-      //         dropdown.appendChild(optionDiv);
-      //         console.log(dropdown);
-      //     });
-      //     dropdown.style.display = names.length > 0 ? "block" : "none";
-      // }
-
 
       function storeUserInput(userInput) {
         fetch('/store_user_input', {
