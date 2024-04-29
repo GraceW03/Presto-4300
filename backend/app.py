@@ -333,59 +333,80 @@ def combine_rankings(emotions_df, titles_df, title_input, composer_input, same_c
         final_results = final_results.rename(columns={'short': 'short_review'})
 
     final_results = final_results.sort_values(by='combined_rank').head(top_n)
-    final_results['rank_percentage'] = (((13294 - final_results['combined_rank']) / 13294) * 100).round(1)
+    final_results['rank_percentage'] = (((19941 - final_results['combined_rank']) / 19941) * 100).round(1)
+    final_results['composer_rank'] = (((6647 - final_results['composer_rank']) / 6647) * 100).round(1)
+    final_results['emotion_rank'] = (((6647 - final_results['emotion_rank']) / 6647) * 100).round(1)
+    final_results['review_rank'] = (((6647 - final_results['review_rank']) / 6647) * 100).round(1)
 
-    final_json = final_results[['title', 'composer', 'short_review', 'era', 'composer_rank','emotion_rank','review_rank', 'link','rank_percentage']].to_json(orient='records')
+
+    final_json = final_results[['title', 'composer', 'short_review', 'era', 'composer_rank','emotion_rank','review_rank','rank_percentage']].to_json(orient='records')
     print("outputting...")
     return final_json
 
 
 ####################################################################################################
 
-# routes
-@app.route("/")
-def home():
-   return render_template('base.html',title="sample html")
+# # routes
+# @app.route("/")
+# def home():
+#    return render_template('base.html',title="sample html")
 
-@app.route("/input")
-def get_first_step():
-   query = request.args.get("text")
-   return first_step(query, titles_df)
+# @app.route("/input")
+# def get_first_step():
+#    query = request.args.get("text")
+#    return first_step(query, titles_df)
 
-@app.route("/albums")
-def albums_search():
-    text = global_title
-    composer = request.args.get("composer")
-    exclusion = False if request.args.get("exclude") != "null" else True
-    print(exclusion)
-    # purpose = request.args.get("composer")
-    return combine_rankings(emotions_df, titles_df, text, composer, exclusion)
+# @app.route("/albums")
+# def albums_search():
+#     text = global_title
+#     composer = request.args.get("composer")
+#     exclusion = False if request.args.get("exclude") != "null" else True
+#     print(exclusion)
+#     # purpose = request.args.get("composer")
+#     return combine_rankings(emotions_df, titles_df, text, composer, exclusion)
 
-# function for multiple pages from 
-# https://stackoverflow.com/questions/67351167/one-flask-with-multiple-page
-@app.route('/page_two')
-def page_two():
-   return render_template('page_two.html')
+# # function for multiple pages from 
+# # https://stackoverflow.com/questions/67351167/one-flask-with-multiple-page
+# @app.route('/page_two')
+# def page_two():
+#    return render_template('page_two.html')
 
-@app.route('/home')
-def go_home():
-   return render_template('base.html')
+# @app.route('/home')
+# def go_home():
+#    return render_template('base.html')
 
-@app.route('/store_title', methods=["POST"])
-def store_title():
-   print("storing title...")
-   global global_title 
-   title = request.json.get("title_input")
-   global_title = title
-   print("title stored")
-   print(global_title)
-   return render_template('page_two.html')
+# @app.route('/store_title', methods=["POST"])
+# def store_title():
+#    print("storing title...")
+#    global global_title 
+#    title = request.json.get("title_input")
+#    global_title = title
+#    print("title stored")
+#    print(global_title)
+#    return render_template('page_two.html')
 
-@app.route('/get_title')
-def get_title():
-   return json.dumps(global_title)
+# @app.route('/get_title')
+# def get_title():
+#    return json.dumps(global_title)
 
-if 'DB_NAME' not in os.environ:
-   app.run(debug=True,host="0.0.0.0",port=5000)
+# if 'DB_NAME' not in os.environ:
+#    app.run(debug=True,host="0.0.0.0",port=5000)
+
+def test_combined_rankings():
+    title_input = "Sonatas and Rondos"
+    composer_input = "Andy Li"
+    same_compoers = False
+    top_n = 10
+
+    # Assuming the combined_rankings function is properly defined and ready to use
+    result_json = combine_rankings(emotions_df, titles_df, title_input, composer_input, same_compoers, top_n)
+    
+    # Print the combined rankings result in a formatted way
+    formatted_json = json.dumps(json.loads(result_json), indent=4)  # Pretty print the JSON
+    print("Combined Rankings JSON Output:")
+    print(formatted_json)
+# Run the test
+test_combined_rankings()
+
 
 
