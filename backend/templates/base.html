@@ -41,9 +41,9 @@
 
             <div id="loading" style="display: none;">Loading suggested inputs...
                 <br>
-                <iframe src="https://giphy.com/embed/VgMnMz4Lrq6km1iWSv" width="480" height="480" frameBorder="0"
-                    class="giphy-embed" allowFullScreen></iframe>
-                <p><a href="https://giphy.com/stickers/violin-geige-viool-VgMnMz4Lrq6km1iWSv">via GIPHY</a></p>
+                <iframe src="https://giphy.com/embed/VgMnMz4Lrq6km1iWSv" frameBorder="0" class="giphy-embed"
+                    allowFullScreen></iframe>
+                <a href="https://giphy.com/stickers/violin-geige-viool-VgMnMz4Lrq6km1iWSv"></a>
             </div>
         </div>
 
@@ -128,7 +128,7 @@
 
                     let tempDiv = document.createElement("div")
                     // get title, composer, description (TODO) 
-                    tempDiv.innerHTML = answerBoxTemplate(row.title, row.composer, row.era, row.short_review, row.score, row.link)
+                    tempDiv.innerHTML = answerBoxTemplate(row.title, row.composer, row.era, row.short_review, row.rank_percentage, row.link)
                     document.getElementById("answer-box").appendChild(tempDiv)
                     console.log(document.getElementById("answer-box").value)
                 }));
@@ -143,13 +143,13 @@
 
         // image from https://pngfre.com/youtube-logo-png/
         function answerBoxTemplate(title, composer, era, short_review, score, link) {
-            return `<div class=''>
+            return `<div class='answer'>
               <h3 class='episode-title'>Title: ${title}</h3>
               <h3 class='composer'>Composer: ${composer}</h3>
               <h3 class='era'>Era: ${era}</h3>
               <h3 class='desc'>Summary: ${short_review}</h3>
               <p class='score'>Similarity Score: ${score}</p>
-              <a href='https://www.youtube.com/results?search_query=${link}'><img src='images/youtube.png'></img></a>
+              <a href='https://www.youtube.com/results?search_query=${link}'><img src="{{ url_for('static', filename='images/youtube.png') }}"></img></a><br>
           </div>`
         }
 

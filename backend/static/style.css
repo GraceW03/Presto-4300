@@ -23,9 +23,14 @@
     background-image: url('images/sheet_music2.png');
 }
 
+body {
+    background-image: url('images/sheet_music2.png');
+}
+
 iframe {
     width: 7em;
     height: 7em;
+    justify-items: center;
 }
 
 .google-colors h1 {
@@ -85,7 +90,17 @@ input {
     color: gray;
 }
 
-#answer-box {
+/* #answer-box {
+    width: 700px;
+    margin-top: 50px;
+    background-color: floralwhite;
+    margin-bottom: 50px;
+    border-radius: 10px;
+    border: 1px solid black;
+    padding: 20px;
+} */
+
+.answer {
     width: 700px;
     margin-top: 50px;
     background-color: floralwhite;
@@ -148,6 +163,10 @@ input {
     border: black;
 }
 
+.submit-button-container-two {
+    margin-bottom: 20px;
+}
+
 a {
     color: black;
 }
@@ -160,4 +179,9 @@ a {
     font-size: 24px;
     font-weight: bold;
     z-index: 1000;
+}
+
+.answer img {
+    width: 2rem;
+    height: auto;
 }
