@@ -13,15 +13,16 @@
         <div class="top-text">
             <div class="google-colors">
                 <a href="home">
-                    <h1>Presto</h1>
+                    <h1>Presto!</h1>
                 </a>
             </div>
 
 
-
+            <h3>What kind of classical music would you like to listen to?</h3>
+            <br>
             <div class="input-box" onclick="sendFocus('input-val')">
                 <img src="{{ url_for('static', filename='images/mag.png') }}" />
-                <input placeholder="Search for a classical album" id="input-val">
+                <input placeholder="Mood? Album name? Anything?" id="input-val">
             </div>
 
 
@@ -36,7 +37,7 @@
         <!-- submit button -->
 
 
-        <div id="loading" style="display: none;">Loading...
+        <div id="loading" style="display: none;">Loading suggested inputs...
             <br>
             <!-- <img src="images/violin.gif"> -->
         </div>
@@ -69,15 +70,16 @@
                 },
                 body: JSON.stringify({ title_input: title })
             })
+                // referenced https://flask.palletsprojects.com/en/2.3.x/patterns/javascript/
                 .then(response => {
                     if (response.ok) {
-                        return response.text(); // Assuming server responds with text/html
+                        return response.text();
                     } else {
                         throw new Error('Request failed!');
                     }
                 })
                 .then(data => {
-                    document.body.innerHTML = data; // Replace the current page content with the new content
+                    document.body.innerHTML = data;
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -129,7 +131,7 @@
         function inputTemplate(title, composer) {
             return `<div class='input-output'>
                     <h3 class='episode-title'>Title: ${title}</h3>
-                    <h3 class='compoer'>Composer: ${composer}</h3>
+                    <h3 class='composer'>Composer: ${composer}</h3>
             </div>`
         }
 

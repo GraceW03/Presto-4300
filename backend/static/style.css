@@ -13,6 +13,10 @@
     background-image: url('images/sheet_music_transparent.png');
 }
 
+.top-text {
+    margin: 70px;
+}
+
 #google-c {
     color: #4285F4;
 }
@@ -51,6 +55,7 @@
 
 h1 {
     font-family: cursive;
+    font-style: italic;
 }
 
 .input-box {

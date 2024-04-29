@@ -13,13 +13,13 @@
     <div class="top-text">
       <div class="google-colors">
         <a href="home">
-          <h1>Presto</h1>
+          <h1>Presto!</h1>
         </a>
       </div>
 
       <div class="input-box" onclick="sendFocus('filter-text-composer')">
         <img src="{{ url_for('static', filename='images/mag.png') }}" />
-        <input placeholder="Search for a composer" id="filter-text-composer">
+        <input placeholder="What composer are you feeling like today?" id="filter-text-composer">
       </div>
 
       <!-- <div class="input-box">
@@ -32,6 +32,12 @@
           <option value="sleep" style="color:black">sleep</option>
         </select>
       </div> -->
+
+      <br>
+
+      <div class="exclude-composer-bool">
+        <input type="checkbox" id="comp" name="composer-exclusion" value="Exclude this composer from my results">
+      </div>
 
       <br>
 
@@ -64,38 +70,6 @@
           .catch(error => console.error('Error fetching title:', error));
       }
 
-      // document.addEventListener('DOMContentLoaded', function () {
-      //   fetch('/album_names')
-      //     .then(response => response.json())
-      //     .then(data => {
-      //       window.recipeNames = data; // Store recipe names globally
-      //     })
-      //     .catch(error => console.error('Error fetching album names:', error));
-      // });
-
-      // function getAlbums() {
-      //   let userInput = document.getElementById("filter-text-val").value;
-      //   if (userInput.length > 0) {  // Ensure there is user input before making the call
-      //     fetch(`/get_titles?query=${encodeURIComponent(userInput)}`)
-      //       .then(response => response.json())
-      //       .then(data => showDropdown(userInput, data))  // Pass the returned data to the dropdown
-      //       .catch(error => console.error('Error fetching names:', error));
-      //   } else {
-      //     showDropdown(userInput);  // Call with empty or default data if no input
-      //   }
-      // }
-
-      // function storeUserInput(userInput) {
-      //   fetch('/store_user_input', {
-      //     method: 'POST',
-      //     headers: {
-      //       'Content-Type': 'application/json',
-      //     },
-      //     body: JSON.stringify({ userInput: userInput })
-      //   })
-      //     .then(response => response.json())
-      //     .catch((error) => console.error('Error storing user input:', error));
-      // }
 
       function fetchResults(title) {
         const composer = document.getElementById("filter-text-composer").value;

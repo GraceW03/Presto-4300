@@ -91,19 +91,6 @@ def first_step(query, dataset, n=5):
 
     return top_titles.to_json(orient='records')
         
-    
-
-
-
-
-
-
-# demo code for similarity function
-# def closest_projects_to_query(query_vec_in, k = 5):
-#     sims = docs_compressed_normed.dot(query_vec_in)
-#     asort = np.argsort(-sims)[:k+1]
-#     return [(i, documents.iloc(i)["Album"],sims[i]) for i in asort[1:]]
-
 
 
 
@@ -343,6 +330,7 @@ def page_two():
 def go_home():
     return render_template('base.html')
 
+# referenced https://stackoverflow.com/questions/66790046/way-to-send-data-from-javascript-front-end-to-flask-back-end-without-ajax
 @app.route('/store_title', methods=["POST"])
 def store_title():
     print("storing title...")
