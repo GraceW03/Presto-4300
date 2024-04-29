@@ -91,6 +91,11 @@ def first_step(query, dataset, n=5):
     # print(top_titles)
 
     return top_titles.to_json(orient='records')
+        
+
+def title_to_link(s):
+    return "+".join(s.split())
+
 
 ####################################################################################################
 # return similar albums based on title
@@ -172,6 +177,7 @@ def find_similar_reviews(query, dataset):
 
     # Sort indices based on normalized reviews scores
     top_indices = normalized_reviews_scores.argsort()[::-1]
+    print(top_indices)
 
     # Assign ranks based on the sorting order
     ranks = range(1, len(top_indices) + 1)
@@ -334,9 +340,8 @@ def home():
 
 @app.route("/input")
 def get_first_step():
-  print("here1")
-  query = request.args.get("text")
-  return first_step(query, titles_df)
+   query = request.args.get("text")
+   return first_step(query, titles_df)
 
 
 @app.route("/albums")
