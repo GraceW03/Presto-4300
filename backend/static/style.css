@@ -1,3 +1,7 @@
+body {
+    background-image: url("images/sheet_music_transparent.png'");
+}
+
 .full-body-container {
     position: absolute;
     top: 0;
@@ -10,8 +14,13 @@
     justify-content: start;
     align-items: center;
     flex-direction: column;
-    background-image: url('images/sheet_music_transparent.png');
+    background-color: rgba(255, 255, 255, 0.5);
+    padding: 1em;
+    border-radius: 0.8em;
+    margin: 4em;
+
 }
+
 
 .top-text {
     margin: 70px;
