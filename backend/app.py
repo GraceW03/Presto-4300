@@ -334,7 +334,7 @@ def combine_rankings(emotions_df, titles_df, title_input, composer_input, same_c
     final_results['review_rank'] = (((6647 - final_results['review_rank']) / 6647) * 100).round(1)
 
 
-    final_json = final_results[['title', 'composer', 'short_review', 'era', 'composer_rank','emotion_rank','review_rank','rank_percentage']].to_json(orient='records')
+    final_json = final_results[['title', 'composer', 'short_review', 'era', 'link', 'composer_rank','emotion_rank','review_rank','rank_percentage']].to_json(orient='records')
     print("outputting...")
     return final_json
 
