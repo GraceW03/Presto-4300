@@ -30,16 +30,13 @@ with open(json_file_path, 'r') as file:
     reviews = data['review'].values()
     titles = data['title'].values()
     eras = data['era'].values()
-
     joy = data['joy'].values()
     sadness = data['sadness'].values()
     fear = data['fear'].values()
     anger = data['anger'].values()
     neutral = data['neutral'].values()
     emotions_df = pd.DataFrame({ "joy":joy, "sadness":sadness, "fear":fear, "anger":anger, "neutral":neutral})
-
     titles_df = pd.DataFrame({"title": titles, "composer": artists, "review": reviews, "era": eras})
-
 title_reverse_index = {t: i for i, t in enumerate(titles_df["title"])}
 composer_reverse_index = {t: i for i, t in enumerate(titles_df["composer"])}
 global_title = None
@@ -104,29 +101,35 @@ def do_svd(mat, k=0, option=False):
     else:
         return U, VT
 
-# Define the find_similar_album_by_emotion function that incorporates the SVD and cosine similarity
-def find_similar_album_by_emotion(emotion_df, query_index, top_k=10):
-    # Apply SVD to the dataframe
-    U = do_svd(emotion_df, k=5)[0]
+def find_similar_album_by_emotion(emotion_df, titles_df, query_index, top_k=10):
+    # Apply SVD to the emotion scores
+    U, _ = do_svd(emotion_df, k=5)
     
-    # Check if query_index is within bounds
+    # Ensure query_index is within the bounds of U
     if query_index >= len(U):
         raise ValueError(f"Query index {query_index} is out of bounds for the DataFrame. Maximum valid index is {len(U) - 1}.")
     
     # Compute cosine similarity
-    query_row = U.iloc[query_index, :].values.reshape(1, -1)
-    similarities = 1 - cdist(query_row, U, metric='cosine').flatten()
+    query_vector = U.iloc[query_index, :].values.reshape(1, -1)
+    similarities = cosine_similarity(query_vector, U).flatten()
     
-    # Get indices of rows in U sorted by similarity (excluding the query row itself)
-    similar_indices = np.argsort(-similarities)
-    similar_indices = similar_indices[similar_indices != query_index][:top_k]
+    # Normalize the similarity scores
+    max_similarity = np.max(similarities) if np.max(similarities) != 0 else 1
+    normalized_scores = similarities / max_similarity
     
-    # Get the similarity scores and vectors for the similar rows
-    similar_scores = similarities[similar_indices]
-    similar_vectors = U.iloc[similar_indices].values
+    # Exclude the query row itself and get top_k indices
+    similar_indices = np.argsort(-normalized_scores)[1:top_k+1]
     
-    return similar_indices, similar_scores, similar_vectors
+    # Create DataFrame with the top results including normalized scores, title, composer, and review from titles_df
+    top_results = pd.DataFrame({
+        "title": titles_df.iloc[similar_indices]['title'].values,  # Assuming titles_df is aligned by index
+        "composer": titles_df.iloc[similar_indices]['composer'].values,  # Extracting composer info
+        "review": titles_df.iloc[similar_indices]['review'].values,  # Extracting review info
+        "era": titles_df.iloc[similar_indices]['era'].values,  # Extracting era info
+        "score": normalized_scores[similar_indices]  # Include normalized similarity scores
+    })
 
+    return top_results
 
 ####################################################################################################
 # return similar albums based on title
