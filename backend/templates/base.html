@@ -36,15 +36,13 @@
         </div>
         <!-- submit button -->
 
+        <div id="input-container">
+
+        </div>
 
         <div id="loading" style="display: none;">Loading suggested inputs...
             <br>
-            <!-- <img src="images/violin.gif"> -->
-        </div>
-
-
-        <div id="input-container">
-
+            <img src="images/violin.gif">
         </div>
 
     </div>
@@ -86,28 +84,28 @@
                 });
         }
 
+
         function firstStepFilter() {
-            document.getElementById("input-container").innerHTML = ""
+            document.getElementById("input-container").innerHTML = "";
+            document.getElementById("loading").style.display = 'block'; // Show the loading div
 
-            // const loadingMessage = document.getElementById('loading');
-            // loadingMessage.style.display = 'block';
-
-            console.log(document.getElementById("input-val").value)
+            console.log(document.getElementById("input-val").value);
             fetch("/input?" + new URLSearchParams({
                 text: document.getElementById("input-val").value,
             }).toString())
                 .then((response) => response.json())
-                .then((data) => data.forEach(row => {
-                    let buttonElement = document.createElement("button")
-                    buttonElement.classList.add("input-button")
-                    buttonElement.innerHTML = inputTemplate(row.title, row.composer)
-                    buttonElement.onclick = function () {
-                        storeTitle(row.title)
-                    }
-                    document.getElementById("input-container").appendChild(buttonElement)
-                    // loadingMessage.style.display = "none";
-                })
-                );
+                .then((data) => {
+                    data.forEach(row => {
+                        let buttonElement = document.createElement("button");
+                        buttonElement.classList.add("input-button");
+                        buttonElement.innerHTML = inputTemplate(row.title, row.composer);
+                        buttonElement.onclick = function () {
+                            storeTitle(row.title);
+                        };
+                        document.getElementById("input-container").appendChild(buttonElement);
+                    });
+                    document.getElementById("loading").style.display = 'none'; // Hide the loading div
+                });
         }
 
         // function filterText() {
