@@ -94,47 +94,36 @@
 
 
   <div class="full-body-container">
-    <div class="top-text">
-      <div class="google-colors">
+    <div class="inner-body-container">
+      <div class="top-text">
         <a href="home">
           <h1>Presto!</h1>
         </a>
-      </div>
 
-      <div class="input-box" onclick="sendFocus('filter-text-composer')">
-        <img src="{{ url_for('static', filename='images/mag.png') }}" />
-        <input placeholder="What composer are you feeling like today?" id="filter-text-composer">
-      </div>
+        <div class="input-box" onclick="sendFocus('filter-text-composer')">
+          <img src="{{ url_for('static', filename='images/mag.png') }}" />
+          <input placeholder="What composer are you feeling like today?" id="filter-text-composer">
+        </div>
 
-      <!-- <div class="input-box">
-        <img src="{{ url_for('static', filename='images/mag.png') }}" />
-        <select id="filter-text-purpose">
-          <option value="" selected hidden>Select a purpose (optional)</option>
-          <option value="study" style="color:black">study</option>
-          <option value="exercise" style="color:black">exercise</option>
-          <option value="relax" style="color:black">relax</option>
-          <option value="sleep" style="color:black">sleep</option>
-        </select>
-      </div> -->
+        <br>
 
-      <br>
+        <div class="exclude-composer-bool">
+          <input type="checkbox" class="exclude-composer" name="composer-exclusion" value="exclude">Exclude this
+          composer from my results
+        </div>
 
-      <div class="exclude-composer-bool">
-        <input type="checkbox" class="exclude-composer" name="composer-exclusion" value="exclude">Exclude this composer
-        from my results
-      </div>
+        <br>
 
-      <br>
-
-      <!-- submit button (to remove) -->
-      <div class="submit-button-container-two">
-        <button onclick="filterText()">Give Me Recommendations!</button>
-      </div>
-      <!-- submit button -->
+        <!-- submit button (to remove) -->
+        <div class="submit-button-container-two">
+          <button onclick="filterText()">Give Me Recommendations!</button>
+        </div>
+        <!-- submit button -->
 
 
-      <div id="answer-box">
+        <div id="answer-box">
 
+        </div>
       </div>
     </div>
   </div>

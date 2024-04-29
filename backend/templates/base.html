@@ -10,39 +10,41 @@
 
 <body>
     <div class="full-body-container">
-        <div class="top-text">
-            <div class="google-colors">
+        <div class="inner-body-container">
+            <div class="top-text">
                 <a href="home">
                     <h1>Presto!</h1>
                 </a>
+
+
+                <h3>What kind of classical music would you like to listen to?</h3>
+                <br>
+                <div class="input-box" onclick="sendFocus('input-val')">
+                    <img src="{{ url_for('static', filename='images/mag.png') }}" />
+                    <input placeholder="Mood? Album name? Anything?" id="input-val">
+                </div>
+
+
             </div>
 
-
-            <h3>What kind of classical music would you like to listen to?</h3>
             <br>
-            <div class="input-box" onclick="sendFocus('input-val')">
-                <img src="{{ url_for('static', filename='images/mag.png') }}" />
-                <input placeholder="Mood? Album name? Anything?" id="input-val">
+
+            <!-- submit button (to change) -->
+            <div class="submit-button-container">
+                <button onclick="firstStepFilter()">Next Step</button>
+            </div>
+            <!-- submit button -->
+
+            <div id="input-container">
+
             </div>
 
-
-        </div>
-
-        <br>
-
-        <!-- submit button (to change) -->
-        <div class="submit-button-container">
-            <button onclick="firstStepFilter()">Next Step</button>
-        </div>
-        <!-- submit button -->
-
-        <div id="input-container">
-
-        </div>
-
-        <div id="loading" style="display: none;">Loading suggested inputs...
-            <br>
-            <img src="images/violin.gif">
+            <div id="loading" style="display: none;">Loading suggested inputs...
+                <br>
+                <iframe src="https://giphy.com/embed/VgMnMz4Lrq6km1iWSv" width="480" height="480" frameBorder="0"
+                    class="giphy-embed" allowFullScreen></iframe>
+                <p><a href="https://giphy.com/stickers/violin-geige-viool-VgMnMz4Lrq6km1iWSv">via GIPHY</a></p>
+            </div>
         </div>
 
     </div>

@@ -80,14 +80,14 @@ def first_step(query, dataset, n=5):
     query_vec = normalize(np.dot(query_tfidf, words_compressed)).squeeze()
 
     sims = docs_compressed_normed.dot(query_vec)
-    asort = np.argsort(-sims)[:n+1]
+    asort = np.argsort(-sims)[:n]
 
 
     top_titles = pd.DataFrame({
         "title": dataset.loc[asort]['title'].values,
         "composer": dataset.loc[asort]['composer'].values,
     })
-    # print(top_titles)
+    print(top_titles)
 
     return top_titles.to_json(orient='records')
         
