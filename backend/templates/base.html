@@ -128,8 +128,9 @@
 
                     let tempDiv = document.createElement("div")
                     // get title, composer, description (TODO) 
-                    tempDiv.innerHTML = answerBoxTemplate(row.title, row.artists, row.scores)
+                    tempDiv.innerHTML = answerBoxTemplate(row.title, row.composer, row.era, row.short_review, row.score, row.link)
                     document.getElementById("answer-box").appendChild(tempDiv)
+                    console.log(document.getElementById("answer-box").value)
                 }));
         }
 
@@ -140,13 +141,16 @@
             </div>`
         }
 
-        // function answerBoxTemplate(title, composer, score) {
-        //     return `<div class=''>
-        //         <h3 class='episode-title'>${title}</h3>
-        //         <h3 class='compoer'>${composer}</h3>
-        //         <p class='episode-desc'>Similarity Score: ${score}</p>
-        //     </div>`
-        // }
+        function answerBoxTemplate(title, composer, era, short_review, score, link) {
+            return `<div class=''>
+              <h3 class='episode-title'>Title: ${title}</h3>
+              <h3 class='composer'>Composer: ${composer}</h3>
+              <h3 class='era'>Era: ${era}</h3>
+              <h3 class='desc'>Summary: ${short_review}</h3>
+              <p class='score'>Similarity Score: ${score}</p>
+              <a href='https://www.youtube.com/results?search_query=${link}'><img src='images/youtube.png'></img></a>
+          </div>`
+        }
 
         function sendFocus(id) {
             document.getElementById(id).focus()
