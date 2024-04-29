@@ -51,6 +51,19 @@
 
     <script>
 
+      function getTitle() {
+        fetch('/get_title')
+          .then(response => response.json())
+          .then(title => {
+            if (title) {
+              fetchResults(title);
+            } else {
+              console.error('No title found.');
+            }
+          })
+          .catch(error => console.error('Error fetching title:', error));
+      }
+
       document.addEventListener('DOMContentLoaded', function () {
         fetch('/album_names')
           .then(response => response.json())
@@ -84,29 +97,47 @@
           .catch((error) => console.error('Error storing user input:', error));
       }
 
-      function filterText() {
+      function fetchResults(title) {
+        const composer = document.getElementById("filter-text-composer").value;
         document.getElementById("answer-box").innerHTML = ""
-        console.log(document.getElementById("filter-text-val").value)
-        fetch("/albums?" + new URLSearchParams({
-          title: document.getElementById("filter-text-val").value,
-          purpose: document.getElementById("filter-text-purpose").value,
-          composer: document.getElementById("filter-text-composer").value
-        }).toString())
-          .then((response) => response.json())
-          .then((data) => data.forEach(row => {
-
-            let tempDiv = document.createElement("div")
-            // get title, composer, description (TODO) 
-            tempDiv.innerHTML = answerBoxTemplate(row.title, row.artists, row.scores)
-            document.getElementById("answer-box").appendChild(tempDiv)
-          }));
-
+        //console.log(document.getElementById("filter-text-val").value)
+        fetch(`/albums?title=${encodeURIComponent(title)}&composer=${encodeURIComponent(composer)}`)
+          .then(response => response.json())
+          .then(data => {
+            data.forEach(row => {
+              let tempDiv = document.createElement("div");
+              tempDiv.innerHTML = answerBoxTemplate(row.title, row.composer, row.score);
+              document.getElementById("answer-box").appendChild(tempDiv);
+            });
+          })
+          .catch(error => console.error('Error fetching results:', error));
       }
+
+      // function filterText() {
+      //   document.getElementById("answer-box").innerHTML = ""
+      //   console.log(document.getElementById("filter-text-val").value)
+      //   fetch("/albums?" + new URLSearchParams({
+      //     title: document.getElementById("filter-text-val").value,
+      //     purpose: document.getElementById("filter-text-purpose").value,
+      //     composer: document.getElementById("filter-text-composer").value
+      //   }).toString())
+      //     .then((response) => response.json())
+      //     .then((data) => data.forEach(row => {
+
+      //       let tempDiv = document.createElement("div")
+      //       // get title, composer, description (TODO) 
+      //       tempDiv.innerHTML = answerBoxTemplate(row.title, row.artists, row.scores)
+      //       document.getElementById("answer-box").appendChild(tempDiv)
+      //     }));
+
+      // }
 
       function answerBoxTemplate(title, composer, score) {
         return `<div class=''>
               <h3 class='episode-title'>${title}</h3>
               <h3 class='compoer'>${composer}</h3>
+              <h3 class='compoer'>${era}</h3>
+              <h3 class='compoer'>${short_review}</h3>
               <p class='episode-desc'>Similarity Score: ${score}</p>
           </div>`
       }
