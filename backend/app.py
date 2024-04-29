@@ -8,6 +8,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.decomposition import TruncatedSVD
 from scipy.sparse.linalg import svds
+from sklearn.preprocessing import normalize
 import numpy as np
 from numpy.linalg import svd
 from scipy.spatial.distance import cdist
@@ -29,32 +30,66 @@ with open(json_file_path, 'r') as file:
     reviews = data['review'].values()
     titles = data['title'].values()
     eras = data['era'].values()
-<<<<<<< HEAD
+
     joy = data['joy'].values()
     sadness = data['sadness'].values()
     fear = data['fear'].values()
     anger = data['anger'].values()
     neutral = data['neutral'].values()
     emotions_df = pd.DataFrame({ "joy":joy, "sadness":sadness, "fear":fear, "anger":anger, "neutral":neutral})
-=======
->>>>>>> refs/remotes/origin/master
+
     titles_df = pd.DataFrame({"title": titles, "composer": artists, "review": reviews, "era": eras})
 
 title_reverse_index = {t: i for i, t in enumerate(titles_df["title"])}
-composer_reverse_index = {t: i for i, t in enumerate(titles_df["composer"])}
+composer_reverse_index = {t: i for i, t in enumerate(titles_df["artist"])}
+global_title = None
 
 app = Flask(__name__)
 CORS(app)
 
 #########################################################################################
 # find similarity between user input and albums for first step of search
-def first_step(dataset):
-    vectorizer = TfidfVectorizer()
-    td_matrix = vectorizer.fit_transform(dataset)
+def first_step(query, dataset, n=5):
+    corpus = []
+    for _, row in dataset.iterrows():
+        album = row['title'] if not pd.isnull(row['title']) else ""
+        review = row['review'] if not pd.isnull(row['review']) else ""
+        artist = row['composer'] if not pd.isnull(row['composer']) else ""
+        era = row['era'] if not pd.isnull(row['era']) else ""
+        row_data = ' '.join([album, review, artist, era])
+        corpus.append(row_data)
+
+    # corpus = dataset["titles"].str.cat([dataset['reviews'], dataset['artists'], 
+    #                                     dataset['eras']], sep =" ").to_list()
+
+    print("made corpus")
+
     # from svd_demo-kickstarter-2024-inclass.ipynb
-    u, s, v_trans = svds(td_matrix)
-    docs_compressed, s, words_compressed = svds(td_matrix, k=40)
+    vectorizer = TfidfVectorizer(stop_words = 'english', max_df = .7, min_df = 50)
+    td_matrix = vectorizer.fit_transform(corpus)
+    docs_compressed, s, words_compressed = svds(td_matrix, k=100)
     words_compressed = words_compressed.transpose()
+
+    # word_to_index = vectorizer.vocabulary_
+    # index_to_word = {i:t for t,i in word_to_index.items()}
+    # words_compressed_normed = normalize(words_compressed, axis = 1)
+    docs_compressed_normed = normalize(docs_compressed)
+    print("compressed")
+
+    query_tfidf = vectorizer.transform([query]).toarray()
+    query_vec = normalize(np.dot(query_tfidf, words_compressed)).squeeze()
+
+    sims = docs_compressed_normed.dot(query_vec)
+    asort = np.argsort(-sims)[:n+1]
+
+
+    top_titles = pd.DataFrame({
+        "title": dataset.loc[asort]['title'].values,
+        "composer": dataset.loc[asort]['composer'].values,
+    })
+    # print(top_titles)
+
+    return top_titles.to_json(orient='records')
 
 #########################################################################################
 # find similarity between albums based on emotion:
@@ -101,22 +136,8 @@ def title_search(query):
     matches_filtered_json = matches_filtered.to_json(orient='records')
     return matches_filtered_json
 
-#return similar classical titles based on input title query
-@app.route("/get_titles", methods=['GET'])
-def get_titles():
-    user_input = request.args.get('query','')
-    if user_input:
-        try:
-            filtered_names = find_similar_titles(user_input, titles_df)
-            print(filtered_names)
-            return jsonify(filtered_names)
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
-    else:
-        return jsonify([])
 
-
-def find_similar_titles(query, dataset):
+def find_similar_title(query, dataset):
     vectorizer = TfidfVectorizer()
 
     tfidf_matrix = vectorizer.fit_transform(dataset['title'].fillna(""))
@@ -136,33 +157,6 @@ def jaccard_similarity(set1, set2):
     union = len(set(set1).union(set2))
     return intersection / union if union != 0 else 0
 
-### helper function
-def inverted_index(album_name, dataset):
-    for index, name in enumerate(dataset["titles"]):
-        if album_name != name:
-            continue
-        else:
-            return index
-        
-### helper function
-def get_reviews(query, dataset):
-    index = inverted_index(query, dataset)
-    index_of_reviews_column = dataset.columns.get_loc('review')
-    album_row = dataset.iloc[index]
-    return album_row[index_of_reviews_column]
-
-def theme_similarity_scores(input_album, dataset):
-    location = inverted_index(input_album, dataset)
-    input_themes = dataset["themes"][location]
-    similarity_scores = []
-    for themes in dataset["themes"]:
-        if input_themes == themes:
-            continue
-        else:
-            score = jaccard_similarity(input_themes, themes)
-            similarity_scores.append(score)
-    return similarity_scores
-
 def categorize_similarity(scores):
     # Define categories based on score ranges
     categories = []
@@ -178,9 +172,17 @@ def categorize_similarity(scores):
     return categories
 
 ####################################################################################################
+### helper function
+def get_reviews(query, dataset):
+    index = title_reverse_index[query]
+    index_of_reviews_column = dataset.columns.get_loc('review')
+    album_row = dataset.iloc[index]
+    return album_row[index_of_reviews_column]
+
 def find_similar_reviews(query, dataset):
     # Vectorize reviews
     vectorizer_reviews = TfidfVectorizer()
+    tfidf_matrix_reviews = vectorizer_reviews.fit_transform(dataset['review'].fillna(""))
     tfidf_matrix_reviews = vectorizer_reviews.fit_transform(dataset['review'].fillna(""))
 
     # Transform the query to fit the trained TF-IDF model for reviews
@@ -204,6 +206,28 @@ def find_similar_reviews(query, dataset):
 
     return top_titles
 
+# does the same thing hmmm
+def cos_sim_album(title_input, dataset):
+    album_index = title_reverse_index[title_input]
+
+    vectorizer = TfidfVectorizer()
+
+    tfidf_matrix = vectorizer.fit_transform(dataset['review'])
+
+    query_vec = vectorizer.transform([dataset.iloc[album_index]['review']])
+
+    cosine_scores = cosine_similarity(query_vec, tfidf_matrix)
+
+    top_indices = cosine_scores.argsort()[0][:][::-1]
+
+    top_titles = pd.DataFrame({
+        "title": dataset.loc[top_indices]['title'].values,
+        "composer": dataset.loc[top_indices]['composer'].values,
+        "review": dataset.loc[top_indices]['review'].values,
+        "score": cosine_scores[top_indices]  # Include final scores for reference
+    })
+    return top_titles
+
 def find_similar_composers(query, dataset):
     # Normalize the input and create a copy of the dataset for manipulation
     artists_normalized = dataset['composer'].str.lower()
@@ -221,8 +245,10 @@ def find_similar_composers(query, dataset):
     # Determine the era of the input artist based on the highest cosine similarity
     top_index = cosine_scores.argmax()
     input_artist_era = dataset.iloc[top_index]['era']
+    input_artist_era = dataset.iloc[top_index]['era']
 
     # Calculate era scores (1 if matching era, 0 otherwise)
+    era_scores = (dataset['era'] == input_artist_era).astype(int)
     era_scores = (dataset['era'] == input_artist_era).astype(int)
 
     # Normalize scores to ensure fair weighting
@@ -254,41 +280,46 @@ def combine_review_and_composer_search(title_query, composer_query, dataset):
     if not similar_reviews.empty and not similar_composers.empty:
         combined_results = pd.merge(similar_reviews, similar_composers, on=['title', 'composer', 'review'], suffixes=('_review', '_composer'))
         combined_results['score'] = (combined_results['score_review'] + combined_results['score_composer']) / 2
+        combined_results = pd.merge(similar_reviews, similar_composers, on=['title', 'composer', 'review'], suffixes=('_review', '_composer'))
+        combined_results['score'] = (combined_results['score_review'] + combined_results['score_composer']) / 2
     else:
         return pd.DataFrame()  # Return empty if any of the searches yield no results
 
     # Sort by the combined score in descending order
     combined_results = combined_results.sort_values(by='score', ascending=False)
+    combined_results = combined_results.sort_values(by='score', ascending=False)
 
     # Return the top N results
+    return combined_results[['title', 'composer', 'review', 'score']]
     return combined_results[['title', 'composer', 'review', 'score']]
 
 
 ####################################################################################################
-def combine_rankings(dataset, title_input, composer_input, purpose_input, top_n=10):
+def combine_rankings(dataset, title_input, composer_input, top_n=10):
     ''' 
     Get a list of rankings from each algorithm, then will weight avg to 
     get final result
     '''
     if composer_input and title_input:
         top_titles_artists = combine_review_and_composer_search(title_input, composer_input, dataset)
+        top_titles_artists = combine_review_and_composer_search(title_input, composer_input, dataset)
         output = top_titles_artists.iloc[:top_n]
 
     elif title_input:
-        top_titles = find_similar_titles(title_input, dataset)
+        top_titles = find_similar_reviews(title_input, dataset)
         output = top_titles.iloc[:top_n]
 
     elif composer_input:
         top_composers = find_similar_composers(composer_input, dataset)
         output = top_composers.iloc[:top_n]
 
-    if purpose_input != "Select a purpose (optional)":
-        pass #TODO
+    # have to add explainbility by showing common words/first two lines of reviews
 
     # Extracting relevant information for output
-    titles = output["titles"].tolist()
+    titles = output["title"].tolist()
     artists = output["composer"].tolist()
-    scores = output["scores"].tolist()
+    eras = output["era"].tolist()
+    scores = output["score"].tolist()
 
     # Create DataFrame with categorized scores
     new_output = pd.DataFrame({
@@ -307,17 +338,43 @@ def combine_rankings(dataset, title_input, composer_input, purpose_input, top_n=
 def home():
     return render_template('base.html',title="sample html")
 
-@app.route("/album_names", methods=["GET"])
-def get_albums():
-    return jsonify(titles_df["titles"].to_list())
+@app.route("/input")
+def get_first_step():
+   print("here1")
+   query = request.args.get("text")
+   return first_step(query, titles_df)
 
 
 @app.route("/albums")
 def albums_search():
     text = request.args.get("title")
     composer = request.args.get("composer")
-    purpose = request.args.get("composer")
-    return combine_rankings(titles_df, text, composer, purpose)
+    # purpose = request.args.get("composer")
+    return combine_rankings(titles_df, text, composer)
+
+# function for multiple pages from 
+# https://stackoverflow.com/questions/67351167/one-flask-with-multiple-page
+@app.route('/page_two')
+def page_two():
+    return render_template('page_two.html')
+
+@app.route('/home')
+def go_home():
+    return render_template('base.html')
+
+@app.route('/store_title', methods=["POST"])
+def store_title():
+    print("storing title...")
+    global global_title 
+    title = request.json.get("title_input")
+    global_title = title
+    print("title stored")
+    print(global_title)
+    return render_template('page_two.html')
+
+@app.route('/get_title')
+def get_title():
+    return json.dumps(global_title)
 
 if 'DB_NAME' not in os.environ:
     app.run(debug=True,host="0.0.0.0",port=5000)

@@ -109,6 +109,28 @@ input {
     padding: 20px;
 }
 
+.input-output {
+    margin: 10px;
+    width: 200px;
+    background-color: floralwhite;
+    /* margin-bottom: 50px;
+    marin */
+    border-radius: 10px;
+    border: 1px solid black;
+
+}
+
+#input-container {
+    display: flex;
+    border-style: none;
+}
+
+#input-container button {
+    outline-style: none;
+
+
+}
+
 .episode-title {
     font-family: 'Kanit', sans-serif;
 }
@@ -124,4 +146,8 @@ input {
 .submit-button-container {
     border-radius: 10px;
     border: black;
+}
+
+a {
+    color: black;
 }
