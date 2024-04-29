@@ -12,47 +12,31 @@
     <div class="full-body-container">
         <div class="top-text">
             <div class="google-colors">
-                <!-- <h1 id="google-4">4</h1>
-                <h1 id="google-3">3</h1>
-                <h1 id="google-0-1">0</h1>
-                <h1 id="google-0-2">0</h1> -->
-                <h1>Presto</h1>
+                <a href="home">
+                    <h1>Presto</h1>
+                </a>
             </div>
 
 
 
-
-            <div class="input-box" onclick="sendFocus('filter-text-val')">
+            <div class="input-box" onclick="sendFocus('input-val')">
                 <img src="{{ url_for('static', filename='images/mag.png') }}" />
-                <input placeholder="Search for a classical album" id="filter-text-val">
+                <input placeholder="Search for a classical album" id="input-val">
             </div>
 
-            <div class="input-box" onclick="sendFocus('filter-text-composer')">
-                <img src="{{ url_for('static', filename='images/mag.png') }}" />
-                <input placeholder="Search for a composer" id="filter-text-composer">
-            </div>
-
-            <div class="input-box">
-                <img src="{{ url_for('static', filename='images/mag.png') }}" />
-                <select id="filter-text-purpose">
-                    <option value="" selected hidden>Select a purpose (optional)</option>
-                    <option value="study" style="color:black">study</option>
-                    <option value="exercise" style="color:black">exercise</option>
-                    <option value="relax" style="color:black">relax</option>
-                    <option value="sleep" style="color:black">sleep</option>
-                </select>
-            </div>
 
         </div>
 
         <br>
 
+        <!-- submit button (to change) -->
         <div class="submit-button-container">
-            <button onclick="filterText()">Submit Inputs</button>
+            <button onclick="firstStepFilter()">Next Step</button>
         </div>
+        <!-- submit button -->
 
 
-        <div id="answer-box">
+        <div id="input-container">
 
         </div>
     </div>
@@ -68,32 +52,80 @@
 
     <script>
 
-        function filterText() {
-            document.getElementById("answer-box").innerHTML = ""
-            console.log(document.getElementById("filter-text-val").value)
-            fetch("/albums?" + new URLSearchParams({
-                title: document.getElementById("filter-text-val").value,
-                purpose: document.getElementById("filter-text-purpose").value,
-                composer: document.getElementById("filter-text-composer").value
+        // store the title in the backend
+        function storeTitle(title) {
+            fetch('/store_title', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ title_input: title })
+            })
+                .then(response => {
+                    if (response.ok) {
+                        return response.text(); // Assuming server responds with text/html
+                    } else {
+                        throw new Error('Request failed!');
+                    }
+                })
+                .then(data => {
+                    document.body.innerHTML = data; // Replace the current page content with the new content
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function firstStepFilter() {
+            document.getElementById("input-container").innerHTML = "<br><h3>Here are some possible inputs...<\h3>"
+            console.log(document.getElementById("input-val").value)
+            fetch("/input?" + new URLSearchParams({
+                text: document.getElementById("input-val").value,
             }).toString())
                 .then((response) => response.json())
                 .then((data) => data.forEach(row => {
-
-                    let tempDiv = document.createElement("div")
-                    // get title, composer, description (TODO) 
-                    tempDiv.innerHTML = answerBoxTemplate(row.title, row.composer, row.score)
-                    document.getElementById("answer-box").appendChild(tempDiv)
+                    let buttonElement = document.createElement("button")
+                    buttonElement.classList.add("input-button")
+                    buttonElement.innerHTML = inputTemplate(row.title, row.composer)
+                    buttonElement.onclick = function () {
+                        storeTitle(row.title)
+                    }
+                    document.getElementById("input-container").appendChild(buttonElement)
                 }));
-
         }
 
-        function answerBoxTemplate(title, composer, score) {
-            return `<div class=''>
-                <h3 class='episode-title'>${title}</h3>
-                <h3 class='compoer'>${composer}</h3>
-                <p class='episode-desc'>Similarity Score: ${score}</p>
+        // function filterText() {
+        //     document.getElementById("input-suggestions").innerHTML = ""
+        //     console.log(document.getElementById("filter-text-val").value)
+        //     fetch("/albums?" + new URLSearchParams({
+        //         title: document.getElementById("filter-text-val").value,
+        //         purpose: document.getElementById("filter-text-purpose").value,
+        //         composer: document.getElementById("filter-text-composer").value
+        //     }).toString())
+        //         .then((response) => response.json())
+        //         .then((data) => data.forEach(row => {
+        //             let tempDiv = document.createElement("div")
+        //             // get title, composer, description (TODO) 
+        //             tempDiv.innerHTML = inputTemplate(row.title, row.artists)
+        //             document.getElementById("input-suggestions").appendChild(tempDiv)
+        //         }));
+
+        // }
+
+        function inputTemplate(title, composer) {
+            return `<div class='input-output'>
+                    <h3 class='episode-title'>${title}</h3>
+                    <h3 class='compoer'>${composer}</h3>
             </div>`
         }
+
+        // function answerBoxTemplate(title, composer, score) {
+        //     return `<div class=''>
+        //         <h3 class='episode-title'>${title}</h3>
+        //         <h3 class='compoer'>${composer}</h3>
+        //         <p class='episode-desc'>Similarity Score: ${score}</p>
+        //     </div>`
+        // }
 
         function sendFocus(id) {
             document.getElementById(id).focus()
