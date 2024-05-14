@@ -67,9 +67,6 @@ def first_step(query, dataset, n=5):
     docs_compressed, s, words_compressed = svds(td_matrix, k=50)
     words_compressed = words_compressed.transpose()
 
-    # word_to_index = vectorizer.vocabulary_
-    # index_to_word = {i:t for t,i in word_to_index.items()}
-    # words_compressed_normed = normalize(words_compressed, axis = 1)
     docs_compressed_normed = normalize(docs_compressed)
 
     query_tfidf = vectorizer.transform([query]).toarray()
@@ -335,7 +332,6 @@ def combine_rankings(emotions_df, titles_df, title_input, composer_input, same_c
 
 
     final_json = final_results[['title', 'composer', 'short_review', 'era', 'link', 'composer_rank','emotion_rank','review_rank','rank_percentage']].to_json(orient='records')
-    print("outputting...")
     return final_json
 
 
